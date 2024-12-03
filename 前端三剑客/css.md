@@ -130,14 +130,37 @@ BFC(Block Formatting Context，区块格式化上下文)是Web页面CSS渲染的
 - 防止外边距折叠
 - 清除浮动
 
-## 九. BEM规范
+## 九. CSS属性
+- `white-space`
+    
+    控制空白字符的显示
+    - `normal`: 不保留换行符和空格，可以自动换行
+    - `nowrap`: 不保留换行符和空格，不能自动换行
+    - `pre`: 保留换行符和空格，不能自动换行
+    - `pre-wrap`: 保留换行符和空格，可以自动换行
+    - `pre-line`: 保留换行符，不保留空格，可以自动换行
+
+- `word-break`
+    
+    控制单词如何拆分换行
+    - `normal`: 默认值
+    - `keep-all`: 单词触碰边界一律不换行
+    - `break-all`: 单词触碰边界一律拆分换行
+
+- `word-wrap`
+
+    控制超过一行的单词是否换行
+    - `normal`: 默认值
+    - `break-word`: 换行
+
+## 十. BEM规范
 BEM即块级元素修饰符（Block Element Modifier）。在BEM中，一个块，例如一个按钮、菜单或标志，就是独立的实体。一个元素就像一个列表项或标题一样，被绑定到它所在的块。修饰符是标记到一个块或元素的标示，能够改变样式或者行为。
 ```css
 .button__icon {}
 .button--primary {}
 ```
 
-## 十. 实用场景
+## 十一. 实用场景
 ### 多行文本省略
 ```css
 .box {
