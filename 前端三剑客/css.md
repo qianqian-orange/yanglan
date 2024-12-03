@@ -379,5 +379,3 @@ BEM即块级元素修饰符（Block Element Modifier）。在BEM中，一个块�
     background-color: rgba(255, 255, 255, .5);
 }
 ```
-
-## 十一. 常见问题
