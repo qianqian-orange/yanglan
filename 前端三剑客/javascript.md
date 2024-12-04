@@ -41,7 +41,7 @@ JavaScript是一种脚本编程语言，可以实现复杂的交互和功能。
 - x和y为`null`和`undefined`，返回true
 - x和y为`String`和`Number`，将`String`转成`Number`再比较
 - x和y其中一方为`Boolean`类型，将`Boolean`类型改成`Number`类型再比较
-- x和y一方为`Object`，另一方为`String`、`Number`或`Symbol`类型，将`Object`类型改成基础数据类型再比较
+- x和y一方为`Object`，另一方为`String`、`Number`或`Symbol`类型，将`Object`类型转成基础数据类型再比较
 - 返回false
 
 ### 对象转基本数据类型

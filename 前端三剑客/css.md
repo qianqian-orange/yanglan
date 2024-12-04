@@ -72,14 +72,14 @@ CSS（Cascading Style Sheets，层叠样式表）是一门样式表语言，为H
         - 默认值是`row`: 主轴水平方向
         - `column`: 主轴垂直方向
 
-    - `justify-content`: 控制flex项在主轴上的位置
+    - `justify-content`: 控制子项在主轴上的位置
         - 默认值是`flex-start`: 所有子项处于主轴的开始处
         - `flex-end`: 所有子项处于主轴的末尾处
         - `center`: 所有子项主轴居中
         - `space-around`: 在主轴上均匀分布，任意一端都会留有空间
         - `space-between`: 在主轴上均匀分布，主轴首位两端不留空间
 
-    - `align-items`: 控制flex项在交叉轴上的位置
+    - `align-items`: 控制子项在交叉轴上的位置
         - 默认值是`stretch`: 所有子项沿着交叉轴的方向延伸以填充父容器
         - `center`: 所有子项交叉轴居中
         - `flex-start`: 所有子项处于交叉轴开始处
@@ -108,7 +108,7 @@ CSS（Cascading Style Sheets，层叠样式表）是一门样式表语言，为H
 
     - 静态定位和相对定位不会脱离正常文档流
     - 固定定位相对于浏览器视口进行定位
-    - 绝对定位的相对定位取决于父元素的`position`，默认情况下`position`的值为`static`，这相对于浏览器视口进行定位
+    - 绝对定位的相对定位取决于父元素的`position`，默认情况下`position`的值为`static`，则相对于浏览器视口进行定位
 
 ## 八. BFC
 BFC(Block Formatting Context，区块格式化上下文)是Web页面CSS渲染的一部分，是块级盒子布局过程发生的区域，也是浮动元素与其他元素交互的区域。
