@@ -27,9 +27,8 @@ HTML（HyperText Markup Language，超文本标记语言）是一种告知浏览
 
 ## 四. HTML文档
 ```html
-  <!-- 示例代码 -->
   <!DOCTYPE html>
-  <html lang="en">
+  <html lang="zh-CN">
     <head>
       <meta charset="UTF-8" />
       <title>HTML</title>
