@@ -92,10 +92,10 @@ git stash drop stash@{n}
 git stash clear
 ```
 
-# git status
+### git status
 查看暂存区改动
 
-# git log
+### git log
 查看commit日志
 
 ```bash
