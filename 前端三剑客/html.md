@@ -100,7 +100,7 @@ HTML（HyperText Markup Language，超文本标记语言）是一种告知浏览
 
 12. 音频: `audio`
 
-## 八. 实用场景
+## 八. 实际场景
 
 ### 站点添加自定义图标
 ```html

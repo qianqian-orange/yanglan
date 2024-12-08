@@ -161,7 +161,7 @@ BEM即块级元素修饰符（Block Element Modifier）。在BEM中，一个块�
 .button--primary {}
 ```
 
-## 十一. 实用场景
+## 十一. 实际场景
 ### 多行文本省略
 ```css
 .box {
