@@ -189,7 +189,7 @@ function throttle(fn, delay) {
       }
       fn.apply(context, args);
       previous = now;
-    } else (!timer) {
+    } else if (!timer) {
       timer = setTimeout(() => {
         fn.apply(context, args);
         timer = null;
