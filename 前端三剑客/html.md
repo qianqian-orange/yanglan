@@ -1,6 +1,6 @@
 # HTML
 ## 一. 什么是HTML
-HTML（HyperText Markup Language，超文本标记语言）是一种告知浏览器如何组织页面页面的标记语言。
+HTML（HyperText Markup Language，超文本标记语言）是一种告知浏览器如何组织页面内容的标记语言。
 
 ## 二. HTML元素
 1. 元素结构

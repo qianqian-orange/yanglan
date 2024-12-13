@@ -13,3 +13,4 @@
 | `image/png`、`image/jpeg`、`image/gif` | 图片类型 |
 | `multipart/form-data` | 表单数据 |
 | `multipart/byteranges` | 指定文件由若干部分组成，每一个部分都有请求范围 |
+| `application/json` | json数据 |

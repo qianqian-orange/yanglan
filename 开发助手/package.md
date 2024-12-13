@@ -6,6 +6,12 @@
 ### [rxjs](https://rxjs.dev/)
 函数式编程库
 
+### [sortablejs](https://www.npmjs.com/package/sortablejs)
+js拖拽库
+
+### [animate.css](https://www.npmjs.com/package/animate.css)
+css动画库
+
 ## Vue
 ### [better-scroll](https://www.npmjs.com/package/better-scroll)
 滚动库
