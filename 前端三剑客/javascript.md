@@ -1,6 +1,6 @@
 # JavaScript
 ## 一. 什么是JavaScript
-JavaScript是一种脚本编程语言，可以实现复杂的交互和功能。
+`JavaScript`是一种脚本编程语言，可以实现复杂的交互和功能。
 
 ## 二. 变量类型
 - `Number`
@@ -36,21 +36,21 @@ JavaScript是一种脚本编程语言，可以实现复杂的交互和功能。
   在变量名前加`#`
 
 ## 八. 原理
-### 弱比较`==`
+### 8.1 弱比较`==`
 - x和y的类型是否相同，如果相同比较值是否相同
-- x和y为`null`和`undefined`，返回true
+- x和y为`null`和`undefined`，返回`true`
 - x和y为`String`和`Number`，将`String`转成`Number`再比较
 - x和y其中一方为`Boolean`类型，将`Boolean`类型改成`Number`类型再比较
 - x和y一方为`Object`，另一方为`String`、`Number`或`Symbol`类型，将`Object`类型转成基础数据类型再比较
-- 返回false
+- 返回`false`
 
-### 对象转基本数据类型
+### 8.2 对象转基本数据类型
 - 调用`Symbol.toPrimitive`，如果转为原始类型则返回
 - 调用`valueOf`方法，如果转为原始类型则返回
 - 调用`toString`f昂奋，如果转为原始类型则返回
 - 报错
 
-### 函数式编程
+### 8.3 函数式编程
 特点
   - 纯函数，稳定的输入输出
   - 无状态，不依赖全局变量、this指针
@@ -76,7 +76,7 @@ function curry(fn, args) {
 }
 ```
 
-### instanceof
+### 8.4 instanceof
 比较原型对象是否相同
 ```js
 function myInstanceof(left, right) {
@@ -90,7 +90,7 @@ function myInstanceof(left, right) {
 }
 ```
 
-### new
+### 8.5 new
 ```js
 function objectFactory(constructor, ...args) {
   let obj = new Object();
@@ -100,7 +100,7 @@ function objectFactory(constructor, ...args) {
 }
 ```
 
-### call
+### 8.6 call
 ```js
 Function.prototype.call = function (context, ...args) {
   if (typeof this !== 'function') {
@@ -114,7 +114,7 @@ Function.prototype.call = function (context, ...args) {
 }
 ```
 
-### apply
+### 8.7 apply
 ```js
 Function.prototype.apply = function (context, args) {
   if (typeof context !== 'function') {
@@ -128,7 +128,7 @@ Function.prototype.apply = function (context, args) {
 }
 ```
 
-### bind
+### 8.8 bind
 ```js
 Function.prototype.bind = function(context, ...args) {
   if (typeof this !== 'function') {
@@ -144,7 +144,7 @@ Function.prototype.bind = function(context, ...args) {
 }
 ```
 
-### Object.create
+### 8.9 Object.create
 ```js
 function create(o) {
   function F() {}
@@ -153,12 +153,12 @@ function create(o) {
 }
 ```
 
-### Object.is
+### 8.10 Object.is
 用于判断x和y是否相同，它解决了`===`不能正确判断`+0`和`-0`，`NaN`和`NaN`这两种情况
 ```js
 function is(x, y) {
   if (x === y) {
-    // 当x为`+0`, y为`-0`时应该返回false
+    // 当x为+0, y为-0时应该返回false
     // 1 / +0 = +Infinity
     // 1 / -0 = -Infinity
     // +Infinity !== -Infinity
@@ -170,7 +170,7 @@ function is(x, y) {
 }
 ```
 
-### throttle
+### 8.11 throttle
 当持续触发事件时，保证一定时间内只执行一次事件处理函数
 ```js
 function throttle(fn, delay) {
@@ -202,7 +202,7 @@ function throttle(fn, delay) {
 }
 ```
 
-### debounce
+### 8.12 debounce
 当持续触发事件时，一定时间内没有再触发事件时才执行一次事件处理函数
 ```js
 function debounce(fn, delay) {
@@ -225,7 +225,18 @@ function debounce(fn, delay) {
 }
 ```
 
-### Promise
+### 8.13 寄生拷贝继承
+```javascript
+function Parent() {}
+function Children() {
+  Parent.call(this)
+}
+Children.prototype = Object.create(Parent.prototype)
+Children.prototype.constructor = Children
+Children.__proto__ = Parent
+```
+
+### 8.14 Promise
 参考文档: https://juejin.cn/post/6844903796129136654
 ```js
 const PENDING = 'pending';

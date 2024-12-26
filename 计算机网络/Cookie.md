@@ -1,6 +1,6 @@
 # Cookie
 ## 一. 什么是Cookie
-HTTP Cookie是服务器发送给浏览器并保存在本地的一小块数据，在浏览器发起请求时会携带并发送给服务器。
+`HTTP Cookie`是服务器发送给浏览器并保存在本地的一小块数据，在浏览器发起请求时会携带并发送给服务器。
 
 ## 二. 创建Cookie
 服务器在响应头添加`Set-Cookie`响应头
@@ -22,7 +22,7 @@ Set-Cookie: <cookie-name>=<cookie-value>
 指定cookie过期时间
 
 ### Secure
-标记为`Secure`的Cookie只能通过HTTPS协议传输
+标记为`Secure`的Cookie只能通过`HTTPS`协议传输
 
 ### HttpOnly
 标记为`HttpOnly`的Cookie无法被JavaScript的`document.cookie`API访问。可以有效预防XSS攻击

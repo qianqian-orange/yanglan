@@ -1,6 +1,6 @@
 # CSS
 ## 一. 什么是CSS
-CSS（Cascading Style Sheets，层叠样式表）是一门样式表语言，为HTML元素添加样式。
+`CSS`（`Cascading Style Sheets`，层叠样式表）是一门样式表语言，为`HTML`元素添加样式。
 
 ## 二. CSS用法
 1. 外部样式表
@@ -67,7 +67,7 @@ CSS（Cascading Style Sheets，层叠样式表）是一门样式表语言，为H
 
 2. 弹性布局
     
-    设置`display`为`flex`将父容器变成flex布局
+    设置`display`为`flex`将父容器变成`flex`布局
 
     - `flex-direction`: 指定主轴方向
         - 默认值是`row`: 主轴水平方向
@@ -112,7 +112,7 @@ CSS（Cascading Style Sheets，层叠样式表）是一门样式表语言，为H
     - 绝对定位的相对定位取决于父元素的`position`，默认情况下`position`的值为`static`，则相对于浏览器视口进行定位
 
 ## 八. BFC
-BFC(Block Formatting Context，区块格式化上下文)是Web页面CSS渲染的一部分，是块级盒子布局过程发生的区域，也是浮动元素与其他元素交互的区域。
+`BFC`(`Block Formatting Context`，区块格式化上下文)是Web页面CSS渲染的一部分，是块级盒子布局过程发生的区域，也是浮动元素与其他元素交互的区域。
 
 以下方式会创建BFC
 - 文档的根标签`html`
@@ -155,14 +155,14 @@ BFC(Block Formatting Context，区块格式化上下文)是Web页面CSS渲染的
     - `break-word`: 换行
 
 ## 十. BEM规范
-BEM即块级元素修饰符（Block Element Modifier）。在BEM中，一个块，例如一个按钮、菜单或标志，就是独立的实体。一个元素就像一个列表项或标题一样，被绑定到它所在的块。修饰符是标记到一个块或元素的标示，能够改变样式或者行为。
+`BEM`即块级元素修饰符（`Block Element Modifier`）。在`BEM`中，一个块，例如一个按钮、菜单或标志，就是独立的实体。一个元素就像一个列表项或标题一样，被绑定到它所在的块。修饰符是标记到一个块或元素的标示，能够改变样式或者行为。
 ```css
 .button__icon {}
 .button--primary {}
 ```
 
 ## 十一. 实际场景
-### 多行文本省略
+### 11.1 多行文本省略
 ```css
 .box {
     width: 100px;
@@ -173,7 +173,7 @@ BEM即块级元素修饰符（Block Element Modifier）。在BEM中，一个块�
 }
 ```
 
-### 元素水平垂直居中
+### 11.2 元素水平垂直居中
 1. 绝对定位 + `margin`
 
     ```css
@@ -214,7 +214,7 @@ BEM即块级元素修饰符（Block Element Modifier）。在BEM中，一个块�
     }
     ```
 
-### 圣杯布局
+### 11.3 圣杯布局
 左右固定，中间宽度自适应
 
 通用样式
@@ -354,7 +354,7 @@ BEM即块级元素修饰符（Block Element Modifier）。在BEM中，一个块�
     }
     ```
 
-### 半透明边框
+### 11.4 半透明边框
 ```html
 <div class="container"></div>
 ```
@@ -369,7 +369,7 @@ BEM即块级元素修饰符（Block Element Modifier）。在BEM中，一个块�
 }
 ```
 
-### 毛玻璃
+### 11.5 毛玻璃
 ```html
 <div class="container">
     <div class="content">

@@ -1,6 +1,6 @@
 # HTML
 ## 一. 什么是HTML
-HTML（HyperText Markup Language，超文本标记语言）是一种告知浏览器如何组织页面内容的标记语言。
+`HTML`（`HyperText Markup Language`，超文本标记语言）是一种告知浏览器如何组织页面内容的标记语言。
 
 ## 二. HTML元素
 1. 元素结构
@@ -43,7 +43,7 @@ HTML（HyperText Markup Language，超文本标记语言）是一种告知浏览
 2. `<html></html`>: 根标签，包含页面所有内容
     - `lang`属性设置文档的主语言
 
-3. `<head></head>`: 包含了HTML页面中不显示的内容，例如CSS样式，字符集声明，页面标题等等
+3. `<head></head>`: 包含了`HTML`页面中不显示的内容，例如`CSS`样式，字符集声明，页面标题等等
 
 4. `<meta />`: 代表元数据
     - 属性`name`指定了`meta`元素的类型；说明该元素包含了什么类型的信息
@@ -51,7 +51,7 @@ HTML（HyperText Markup Language，超文本标记语言）是一种告知浏览
 
 5. `<title></title>`: 设置页面标题
 
-6. `<body></body>`: 包含HTML页面中显示的内容
+6. `<body></body>`: 包含`HTML`页面中显示的内容
 
 ## 五. 字符实体
 在HTML中，字符`<`、`>`、`"`、`'`和`&`是特殊字符，如果想要文本展示，需要使用特殊编码
@@ -102,13 +102,13 @@ HTML（HyperText Markup Language，超文本标记语言）是一种告知浏览
 
 ## 八. 实际场景
 
-### 站点添加自定义图标
+### 8.1 站点添加自定义图标
 ```html
 <link rel="icon" href="/favicon.ico" type="image/x-icon" />
 ```
-> 备注: 如果站点采用了内容安全策略（Content Security Policy, CSP）来增加安全性，这个策略会应用到favicon图标上，如果遇到图标没有加载的问题，要检查是否被CSP的响应头`img-src`指令阻止访问
+> 备注: 如果站点采用了内容安全策略（`Content Security Policy`, `CSP`）来增加安全性，这个策略会应用到`favicon`图标上，如果遇到图标没有加载的问题，要检查是否被`CSP`的响应头`img-src`指令阻止访问
 
-### 响应式图片
+### 8.2 响应式图片
 通过`img`标签的`srcset`和`sizes`属性控制或`picture`标签控制
 - `srcset`定义了浏览器可选择的图片集合以及每个图片的大小，每个图片信息设置用逗号隔开
 

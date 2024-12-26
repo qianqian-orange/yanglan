@@ -12,11 +12,22 @@ js拖拽库
 ### [animate.css](https://www.npmjs.com/package/animate.css)
 css动画库
 
+### [faskclick](https://www.npmjs.com/package/fastclick)
+移动端faskclick
+
 ## Vue
 ### [better-scroll](https://www.npmjs.com/package/better-scroll)
 滚动库
 
 ## React
+### [use-immer](https://www.npmjs.com/package/use-immer)
+方便修改状态的hook
+
+### [@tanstack/react-query](https://www.npmjs.com/package/@tanstack/react-query)
+请求库
+
+### [swr](https://www.npmjs.com/package/swr)
+请求库
 
 ## Nodejs
 ### [ws](https://www.npmjs.com/package/ws)
