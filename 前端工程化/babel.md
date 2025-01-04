@@ -1,13 +1,18 @@
 # babel
-## 一. 什么是babel
-babel是一个JavaScript编译器。
+
+## 一. 什么是 babel
+
+babel 是一个 JavaScript 编译器。
 
 ## 二. 插件和预设
+
 ### 插件执行顺序
+
 - 预设指定的插件执行顺序跟预设书写顺序是相反的
-- plugins指定的插件会优先执行，再执行预设指定的插件
+- plugins 指定的插件会优先执行，再执行预设指定的插件
 
 ### 插件钩子函数
+
 - pre
 
   在执行`visitor`事件函数之前执行
@@ -25,27 +30,28 @@ babel是一个JavaScript编译器。
   自定义生成代码逻辑
 
 ### 预设方法原型
+
 ```javascript
 async (api, options, dirname) => {
-  const plugins = [
-    [() => {}, {}]
-  ]
+  const plugins = [[() => {}, {}]];
   return {
     plugins,
-  }
-}
+  };
+};
 ```
 
 ### 插件方法原型
+
 ```javascript
 async (api, options, dirname) => {
   return {
     visitor,
-  }
-}
+  };
+};
 ```
 
-## 三. babel配置
+## 三. babel 配置
+
 - code
 
   默认值为`true`，指定是否生成代码
@@ -65,8 +71,11 @@ async (api, options, dirname) => {
   ```
 
 ## 四. 原理
+
 ### 动态加载模块
+
 使用`nodejs`的`module`模块实现
+
 ```
 import { createRequire } from 'module'
 const require = createRequire(import.meta.url)
@@ -74,5 +83,6 @@ const require = createRequire(import.meta.url)
 const module = require(xxx)
 ```
 
-### babel编译原理
-[深入理解Babel编译原理](https://juejin.cn/post/7447712058198081546)
+### babel 编译原理
+
+[深入理解 Babel 编译原理](https://juejin.cn/post/7447712058198081546)
