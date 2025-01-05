@@ -1,5 +1,5 @@
 export * from './ReactDOMRoot'
-export * from './hooks'
+export * from './ReactFiberHooks'
 import { createElement } from './ReactElement'
 
 export default {

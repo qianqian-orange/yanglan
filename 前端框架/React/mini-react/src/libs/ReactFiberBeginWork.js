@@ -5,7 +5,7 @@ import {
   HostText,
   NoLanes,
 } from './FiberNode'
-import { renderWithHooks } from './hooks/useState'
+import { renderWithHooks } from './ReactFiberHooks'
 import { createWorkInProgress, reconcileChildren } from './ReactFiberReconciler'
 
 /**

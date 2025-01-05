@@ -1,15 +1,16 @@
 import FiberNode, {
-  ChildDeletion,
   FunctionComponent,
   HostComponent,
-  HostRoot,
   HostText,
-  NoFlags,
   NoLanes,
-  Placement,
-  Update,
 } from './FiberNode'
 import { beginWork } from './ReactFiberBeginWork'
+import {
+  commitMutationEffectsOnFiber,
+  flushPassiveEffects,
+} from './ReactFiberCommitWork'
+import { completeWork } from './ReactFiberCompleteWork'
+import { ChildDeletion, NoFlags, Placement } from './ReactFiberFlags'
 
 let workInProgress = null
 let renderLanes = NoLanes
@@ -37,6 +38,7 @@ export function createWorkInProgress(current, pendingProps) {
   workInProgress.stateNode = current.stateNode
   workInProgress.memoizedState = current.memoizedState
   workInProgress.lanes = current.lanes
+  workInProgress.updateQueue = current.updateQueue
   return workInProgress
 }
 
@@ -228,94 +230,6 @@ export function reconcileChildren(current, workInProgress, nextChildren) {
   return workInProgress.child
 }
 
-// 设置DOM属性值
-function setProp(el, key, value) {
-  switch (key) {
-    case 'children': {
-      if (typeof value === 'string' || typeof value === 'number') {
-        el.textContent = value
-      }
-      break
-    }
-    case 'onClick': {
-      el.onClick = value
-      break
-    }
-  }
-}
-
-function appendAllChildren(el, workInProgress) {
-  let nextChild = workInProgress.child
-  while (nextChild) {
-    if (nextChild.tag === HostComponent || nextChild.tag === HostText) {
-      el.appendChild(nextChild.stateNode)
-    } else {
-      appendAllChildren(el, nextChild)
-    }
-    nextChild = nextChild.sibling
-  }
-}
-
-function bubbleProperties(workInProgress) {
-  let subtreeFlags = NoFlags
-  let child = workInProgress.child
-  while (child) {
-    subtreeFlags |= child.flags
-    subtreeFlags |= child.subtreeFlags
-    child = child.sibling
-  }
-  workInProgress.subtreeFlags |= subtreeFlags
-}
-
-function completeWork(workInProgress) {
-  const current = workInProgress.alternate
-  switch (workInProgress.tag) {
-    // HostRoot和FunctionComponent类型的FiberNode节点没有对应的DOM节点，没有构建DOM树逻辑，只需要收集子树FiberNode节点副作用即可
-    case HostRoot:
-    case FunctionComponent:
-      bubbleProperties(workInProgress)
-      return null
-    case HostComponent: {
-      if (current != null) {
-        if (workInProgress.pendingProps) {
-          workInProgress.flags |= Update
-        }
-        bubbleProperties(workInProgress)
-        return
-      }
-      // 创建DOM节点
-      const { elementType, pendingProps } = workInProgress
-      const instance = document.createElement(elementType)
-      // 将DOM节点赋值给FiberNode的stateNode属性
-      workInProgress.stateNode = instance
-      // 设置DOM节点属性
-      for (const propKey in pendingProps) {
-        const prpoValue = pendingProps[propKey]
-        setProp(instance, propKey, prpoValue)
-      }
-      // 递归遍历FiberNode节点将对应的DOM节点添加到父DOM节点中，构建DOM树
-      appendAllChildren(instance, workInProgress)
-      // 收集子树FiberNode节点副作用
-      bubbleProperties(workInProgress)
-      return null
-    }
-    case HostText: {
-      if (current !== null) {
-        if (workInProgress.pendingProps !== current.pendingProps) {
-          workInProgress.flags |= Update
-        }
-        bubbleProperties(workInProgress)
-        return null
-      }
-      const { pendingProps } = workInProgress
-      const instance = document.createTextNode(pendingProps)
-      workInProgress.stateNode = instance
-      bubbleProperties(workInProgress)
-      return null
-    }
-  }
-}
-
 /**
  * @param {*} unitOfWork FiberNode节点
  */
@@ -363,109 +277,6 @@ function renderRootSync(root, lanes) {
   }
 }
 
-// 获取父DOM节点
-function getParentNode(finishWork) {
-  let parentFiber = finishWork.return
-  while (parentFiber !== null) {
-    if (parentFiber.tag === FunctionComponent) {
-      parentFiber = parentFiber.return
-      continue
-    }
-    break
-  }
-  return parentFiber.tag === HostRoot
-    ? parentFiber.stateNode.containerInfo
-    : parentFiber.stateNode
-}
-
-// 获取子DOM节点
-function getChildNode(finishWork) {
-  let childFiber = finishWork.child
-  while (childFiber !== null) {
-    if (childFiber.tag === FunctionComponent) {
-      childFiber = childFiber.child
-      continue
-    }
-    break
-  }
-  return childFiber.stateNode
-}
-
-function recursivelyTraverseMutationEffects(finishWork) {
-  if (finishWork.deletions !== null) {
-    const parentNode =
-      finishWork.tag === HostComponent
-        ? finishWork.stateNode
-        : getParentNode(finishWork)
-    // 将旧节点对应的DOM节点从DOM树移除
-    finishWork.deletions.forEach((fiber) => {
-      const childNode = getChildNode(fiber)
-      parentNode.removeChild(childNode)
-    })
-  }
-  // 为true说明子树FiberNode节点有副作用需要处理，递归遍历child FiberNode
-  if (finishWork.subtreeFlags & (Placement | Update | ChildDeletion)) {
-    let child = finishWork.child
-    while (child) {
-      commitMutationEffectsOnFiber(child)
-      child = child.sibling
-    }
-  }
-}
-
-function commitHostPlacement(finishWork) {
-  const parentNode = getParentNode(finishWork)
-  parentNode.appendChild(finishWork.stateNode)
-}
-
-function commitReconciliationEffects(finishWork) {
-  if (finishWork.flags & Placement) {
-    commitHostPlacement(finishWork)
-  }
-}
-
-function commitMutationEffectsOnFiber(finishWork) {
-  // 采用深度优先遍历算法进行DOM更新
-  switch (finishWork.tag) {
-    case HostRoot: {
-      recursivelyTraverseMutationEffects(finishWork)
-      break
-    }
-    case FunctionComponent: {
-      recursivelyTraverseMutationEffects(finishWork)
-      // 为true则需要将对应DOM节点插入到父节点DOM中
-      if (finishWork.flags & Placement) {
-        // 获取父节点DOM
-        const parentNode = getParentNode(finishWork)
-        // 获取子节点对应的DOM
-        appendAllChildren(parentNode, finishWork)
-      }
-      break
-    }
-    case HostComponent: {
-      recursivelyTraverseMutationEffects(finishWork)
-      commitReconciliationEffects(finishWork)
-      // 更新DOM属性
-      if (finishWork.flags & Update) {
-        const { pendingProps, stateNode } = finishWork
-        for (const propKey in pendingProps) {
-          const prpoValue = pendingProps[propKey]
-          setProp(stateNode, propKey, prpoValue)
-        }
-      }
-      break
-    }
-    case HostText: {
-      commitReconciliationEffects(finishWork)
-      // 修改文本内容
-      if (finishWork.flags & Update) {
-        finishWork.stateNode.textContent = finishWork.pendingProps
-      }
-      break
-    }
-  }
-}
-
 /**
  * @param {*} root FiberRootNode
  */
@@ -485,6 +296,10 @@ function performWorkOnRoot(root, lanes) {
   renderRootSync(root, lanes)
   // 更新DOM
   commitRoot(root)
+  // 执行useEffect
+  queueMicrotask(() => {
+    flushPassiveEffects(root)
+  })
 }
 
 export { performWorkOnRoot }

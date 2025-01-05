@@ -1,19 +1,20 @@
-import { HostRoot, NoLanes, SyncLane } from '../FiberNode'
-import { ensureRootIsScheduled } from '../ReactFiberRootScheduler'
+import { HostRoot, NoLanes, SyncLane } from './FiberNode'
+import { Passive } from './ReactFiberFlags'
+import { ensureRootIsScheduled } from './ReactFiberRootScheduler'
 
 // 记录当前FiberNode节点
-let currentlyRenderingFiber = null
+export let currentlyRenderingFiber = null
 // 记录旧FiberNode节点的useState hook链表节点
-let currentHook = null
+export let currentHook = null
 // 记录新FiberNode节点useState hook链表节点
-let workInProgressHook = null
+export let workInProgressHook = null
 
 // 组件方法调用装饰器，在调用组件方法前后做一些逻辑处理
 /**
  * @param {*} current 旧FiberNode节点
  * @param {*} workInProgress 新FiberNode节点
  * @param {*} Component 函数组件方法
- * @param {*} props 函数组将方法入参属性
+ * @param {*} props 函数组件方法入参属性
  */
 export function renderWithHooks(current, workInProgress, Component, props) {
   // 记录当前FiberNode节点
@@ -22,6 +23,7 @@ export function renderWithHooks(current, workInProgress, Component, props) {
     // 记录旧FiberNode节点的useState hook链表
     currentHook = current.memoizedState
   }
+  workInProgress.updateQueue = null
   // 调用组件方法获取child ReactElement
   const children = Component(props)
   currentlyRenderingFiber = null
@@ -30,11 +32,22 @@ export function renderWithHooks(current, workInProgress, Component, props) {
   return children
 }
 
-// 每次调用useState方法都会创建一个Hook对象，通过next指针进行索引，构建单链表结构
+// 每次调用React Hook方法都会创建一个Hook对象，通过next指针进行索引，构建单链表结构
 function Hook() {
-  this.memoizedState = null // 记录state值
+  this.memoizedState = null // 记录hook数据
   this.next = null // 记录下一个hook
   this.queue = [] // 收集更新state方法
+}
+
+function mountWorkInProgressHook() {
+  const hook = new Hook()
+  // 构建hook链表
+  if (workInProgressHook === null) {
+    currentlyRenderingFiber.memoizedState = workInProgressHook = hook
+  } else {
+    workInProgressHook = workInProgressHook.next = hook
+  }
+  return hook
 }
 
 // 获取FiberRootNode对象
@@ -49,6 +62,7 @@ function basicStateReducer(state, action) {
   return typeof action === 'function' ? action(state) : action
 }
 
+/*****************************  useState start  *****************************/
 /**
  * @param {*} fiber FiberNode节点
  * @param {*} hook useState hook链表节点
@@ -71,6 +85,7 @@ function dispatchSetState(fiber, hook, action) {
   hook.queue.push((state) => basicStateReducer(state, action))
   root.pendingLanes = SyncLane
   fiber.lanes = SyncLane
+  if (fiber.alternate !== null) fiber.alternate.lanes = SyncLane
   // 触发更新
   ensureRootIsScheduled(root)
 }
@@ -81,14 +96,8 @@ function mountState(initialState) {
   if (typeof initialState === 'function') {
     initialState = initialState()
   }
-  const hook = new Hook()
+  const hook = mountWorkInProgressHook()
   hook.memoizedState = initialState
-  // 构建hook链表
-  if (workInProgressHook === null) {
-    currentlyRenderingFiber.memoizedState = workInProgressHook = hook
-  } else {
-    workInProgressHook = workInProgressHook.next = hook
-  }
   // 触发更新渲染方法
   const dispatch = dispatchSetState.bind(null, currentlyRenderingFiber, hook)
   return [hook.memoizedState, dispatch]
@@ -96,25 +105,19 @@ function mountState(initialState) {
 
 // 触发更新再次调用函数组件处理逻辑
 function updateReducer() {
-  const hook = new Hook()
+  const hook = mountWorkInProgressHook()
   // 执行更新state方法逻辑，获取新的state值
   hook.memoizedState = currentHook.queue.reduce(
     (state, action) => action(state),
     currentHook.memoizedState,
   )
-  // 构建hook链表
-  if (workInProgressHook === null) {
-    currentlyRenderingFiber.memoizedState = workInProgressHook = hook
-  } else {
-    workInProgressHook = workInProgressHook.next = hook
-  }
   currentHook = currentHook.next
   const dispatch = dispatchSetState.bind(null, currentlyRenderingFiber, hook)
   // 返回新的state值和dispatch
   return [hook.memoizedState, dispatch]
 }
 
-function useState(initialState) {
+export function useState(initialState) {
   const current = currentlyRenderingFiber.alternate
   if (current === null) {
     return mountState(initialState)
@@ -122,5 +125,50 @@ function useState(initialState) {
     return updateReducer()
   }
 }
+/*****************************  useState end  *****************************/
 
-export { useState }
+/*****************************  useEffect start  *****************************/
+function areHookInputsEqual(nextDeps, prevDeps) {
+  for (let i = 0; i < nextDeps.length; i++) {
+    if (!Object.is(nextDeps[i], prevDeps[i])) {
+      return false
+    }
+  }
+  return true
+}
+
+function pushEffect(create, deps, destroy = null) {
+  const effect = { create, deps, destroy }
+  if (currentlyRenderingFiber.updateQueue === null)
+    currentlyRenderingFiber.updateQueue = []
+  const queue = currentlyRenderingFiber.updateQueue
+  queue.push(effect)
+  return effect
+}
+
+function mountEffect(create, deps) {
+  const hook = mountWorkInProgressHook()
+  currentlyRenderingFiber.flags |= Passive
+  hook.memoizedState = pushEffect(create, deps)
+}
+
+function updateEffect(create, deps) {
+  const hook = mountWorkInProgressHook()
+  const effect = currentHook.memoizedState
+  if (deps !== null && areHookInputsEqual(deps, effect.deps)) {
+    hook.memoizedState = pushEffect(create, deps, effect.destroy)
+    return
+  }
+  currentlyRenderingFiber.flags |= Passive
+  hook.memoizedState = pushEffect(create, deps)
+}
+
+export function useEffect(create, deps = null) {
+  const current = currentlyRenderingFiber.alternate
+  if (current === null) {
+    mountEffect(create, deps)
+  } else {
+    updateEffect(create, deps)
+  }
+}
+/*****************************  useEffect end  *****************************/
