@@ -1,4 +1,4 @@
-import FiberNode, { HostRoot } from './FiberNode'
+import FiberNode, { HostRoot, NoLanes } from './FiberNode'
 
 /**
  * @param {*} element DOM节点
@@ -11,6 +11,7 @@ function FiberRootNode(element) {
   fiber.stateNode = this
   // 记录根FiberNode节点
   this.current = fiber
+  this.pendingLanes = NoLanes
 }
 
 export default FiberRootNode

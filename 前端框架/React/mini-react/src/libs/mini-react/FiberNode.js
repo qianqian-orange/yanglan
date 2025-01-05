@@ -16,6 +16,12 @@ export const Update = 4
 // 表示该FiberNode节点有子节点要删除
 export const ChildDeletion = 16
 
+export const NoLanes = 0
+
+export const DefaultLane = 32
+
+export const SyncLane = 2
+
 function FiberNode(tag, pendingProps) {
   this.tag = tag // FiberNode节点类型
   this.key = null // 对应ReactElement的key属性
@@ -30,6 +36,7 @@ function FiberNode(tag, pendingProps) {
   this.stateNode = null // FiberNode节点对应的DOM节点
   this.pendingProps = pendingProps // 对应ReactElement的props属性
   this.memoizedState = null // 记录useState数据
+  this.lanes = NoLanes // 优先级标记
 }
 
 export default FiberNode

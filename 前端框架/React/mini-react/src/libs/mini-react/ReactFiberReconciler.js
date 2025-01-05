@@ -5,18 +5,20 @@ import FiberNode, {
   HostRoot,
   HostText,
   NoFlags,
+  NoLanes,
   Placement,
   Update,
 } from './FiberNode'
-import { renderWithHooks } from './hooks/useState'
+import { beginWork } from './ReactFiberBeginWork'
 
 let workInProgress = null
+let renderLanes = NoLanes
 
 /**
  * @param {*} current FiberNode节点
  * @param {*} pendingProps 对应ReactElement对象的props
  */
-function createWorkInProgress(current, pendingProps) {
+export function createWorkInProgress(current, pendingProps) {
   let workInProgress = current.alternate
   if (workInProgress !== null) {
     workInProgress.flags = NoFlags
@@ -34,6 +36,7 @@ function createWorkInProgress(current, pendingProps) {
   workInProgress.sibling = current.sibling
   workInProgress.stateNode = current.stateNode
   workInProgress.memoizedState = current.memoizedState
+  workInProgress.lanes = current.lanes
   return workInProgress
 }
 
@@ -88,7 +91,7 @@ function createChildReconciler(shouldTrackSideEffects) {
 
   // 创建文本对应的FiberNode节点
   function creaetFiberFromText(text) {
-    const fiber = new FiberNode(HostText, text)
+    const fiber = new FiberNode(HostText, text + '')
     return fiber
   }
 
@@ -141,9 +144,12 @@ function createChildReconciler(shouldTrackSideEffects) {
           deleteChild(returnFiber, oldFiber, false)
           nextFiber = placeChild(createFiberFormElement(newChild[newIdx]))
         }
-      } else if (typeof newChild[newIdx] === 'string') {
+      } else if (
+        typeof newChild[newIdx] === 'string' ||
+        typeof newChild[newIdx] === 'number'
+      ) {
         if (oldFiber !== null && oldFiber.tag === HostText) {
-          nextFiber = placeChild(useFiber(oldFiber, newChild[newIdx]))
+          nextFiber = placeChild(useFiber(oldFiber, newChild[newIdx] + ''))
         } else {
           deleteChild(returnFiber, oldFiber, false)
           nextFiber = placeChild(creaetFiberFromText(newChild[newIdx]))
@@ -187,7 +193,7 @@ function createChildReconciler(shouldTrackSideEffects) {
       )
       return firstChildFiber
     }
-    if (typeof newChild === 'string') {
+    if (typeof newChild === 'string' || typeof newChild === 'number') {
       const firstChildFiber = reconcileSingleTextNode(
         returnFiber,
         currentFirstChild,
@@ -209,7 +215,7 @@ const reconcileChildFibers = createChildReconciler(true)
  * @param {*} workInProgress FiberNode节点
  * @param {*} nextChildren child ReactElement对象
  */
-function reconcileChildren(current, workInProgress, nextChildren) {
+export function reconcileChildren(current, workInProgress, nextChildren) {
   if (current === null) {
     workInProgress.child = mountChildFibers(workInProgress, null, nextChildren)
   } else {
@@ -226,7 +232,7 @@ function reconcileChildren(current, workInProgress, nextChildren) {
 function setProp(el, key, value) {
   switch (key) {
     case 'children': {
-      if (typeof value === 'string') {
+      if (typeof value === 'string' || typeof value === 'number') {
         el.textContent = value
       }
       break
@@ -331,57 +337,8 @@ function completeUnitOfWork(unitOfWork) {
   }
 }
 
-/**
- * @param {*} workInProgress FiberNode节点
- */
-function beginWork(workInProgress) {
-  // 获取旧FiberNode节点
-  const current = workInProgress.alternate
-  switch (workInProgress.tag) {
-    case HostRoot: {
-      if (current.child) {
-        const newChild = createWorkInProgress(
-          current.child,
-          current.pendingProps,
-        )
-        newChild.return = workInProgress
-        workInProgress.child = newChild
-        return workInProgress.child
-      }
-      const { children: nextChildren } = workInProgress.pendingProps
-      // 创建child ReactElement对象对应的FiberNode节点
-      return reconcileChildren(current, workInProgress, nextChildren)
-    }
-    case FunctionComponent: {
-      // 获取组件方法
-      const Component = workInProgress.elementType
-      // 调用组件方法获取child ReactElement对象
-      const nextChildren = renderWithHooks(
-        current,
-        workInProgress,
-        Component,
-        workInProgress.pendingProps,
-      )
-      // 创建child ReactElement对应的FiberNode节点
-      return reconcileChildren(current, workInProgress, nextChildren)
-    }
-    case HostComponent: {
-      let { children: nextChildren } = workInProgress.pendingProps
-      // 判断nextChildren是否是纯文本，是则不需要创建FiberNode节点，将nextChildren赋值为null
-      if (typeof nextChildren === 'string') {
-        nextChildren = null
-      }
-      // 创建child ReactElement对象对应的FiberNode节点
-      return reconcileChildren(current, workInProgress, nextChildren)
-    }
-    case HostText: {
-      return null
-    }
-  }
-}
-
 function performUnitOfWork(unitOfWork) {
-  let nextFiber = beginWork(unitOfWork)
+  let nextFiber = beginWork(unitOfWork, renderLanes)
   // next为null，说明已经遍历到当前分支叶子FiberNode节点，则调用completeWork方法构建DOM树和收集子树FiberNode节点副作用
   if (nextFiber === null) {
     completeUnitOfWork(unitOfWork)
@@ -394,13 +351,12 @@ function performUnitOfWork(unitOfWork) {
 // 2. 递归遍历wokrInProgress节点
 /**
  * @param {*} root FiberRootNode对象
- * @param {*} children ReactElement对象
  */
-function renderRootSync(root, children) {
+function renderRootSync(root, lanes) {
+  renderLanes = lanes
   const current = root.current
   // 创建根FiberNode副本节点，赋值给workInProgress
-  workInProgress = createWorkInProgress(current, null)
-  workInProgress.pendingProps = { children }
+  workInProgress = createWorkInProgress(current, current.pendingProps)
   // 递归遍历FiberNode节点，创建ReactElement对应的FiberNode节点，建立关联关系，构建FiberNode Tree
   while (workInProgress !== null) {
     performUnitOfWork(workInProgress)
@@ -523,11 +479,10 @@ function commitRoot(root) {
 
 /**
  * @param {*} root FiberRootNode对象
- * @param {*} children ReactElement对象
  */
-function performWorkOnRoot(root, children) {
+function performWorkOnRoot(root, lanes) {
   // 构建FiberNode Tree和DOM树
-  renderRootSync(root, children)
+  renderRootSync(root, lanes)
   // 更新DOM
   commitRoot(root)
 }

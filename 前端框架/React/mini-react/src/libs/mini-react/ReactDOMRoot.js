@@ -1,3 +1,4 @@
+import { DefaultLane } from './FiberNode'
 import FiberRootNode from './FiberRootNode'
 import { performWorkOnRoot } from './ReactFiberReconciler'
 
@@ -13,7 +14,11 @@ function ReactDOMRoot(root) {
  */
 ReactDOMRoot.prototype.render = function (children) {
   const root = this._internalRoot
-  performWorkOnRoot(root, children)
+  root.pendingLanes = DefaultLane
+  const { current } = root
+  current.lanes = DefaultLane
+  current.pendingProps = { children }
+  performWorkOnRoot(root, root.pendingLanes)
 }
 
 /**
