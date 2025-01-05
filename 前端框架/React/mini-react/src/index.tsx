@@ -1,7 +1,18 @@
-import React, { createRoot, useState } from './libs/mini-react'
+import React, { createRoot, useState } from './libs'
 
 function HelloWorld() {
-  return <h1>are you ok?</h1>
+  const [count, setCount] = useState(0)
+
+  return (
+    <h1
+      onClick={() => {
+        setCount((s: number) => s + 1)
+        setCount((s: number) => s + 1)
+      }}
+    >
+      are you ok?{count}
+    </h1>
+  )
 }
 
 function App() {
