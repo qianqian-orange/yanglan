@@ -13,9 +13,7 @@ function processRootScheduleInMicrotask() {
 }
 
 export function ensureRootIsScheduled(root) {
-  if (didScheduleMicrotask) {
-    return
-  }
+  if (didScheduleMicrotask) return
   firstScheduledRoot = root
   didScheduleMicrotask = true
   queueMicrotask(processRootScheduleInMicrotask)

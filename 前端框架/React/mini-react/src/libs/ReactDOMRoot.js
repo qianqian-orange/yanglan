@@ -26,9 +26,7 @@ ReactDOMRoot.prototype.render = function (children) {
  */
 function createRoot(element) {
   element.addEventListener('click', (event) => {
-    if (event.target.onClick) {
-      event.target.onClick()
-    }
+    if (event.target.onClick) event.target.onClick()
   })
   const root = new FiberRootNode(element)
   return new ReactDOMRoot(root)

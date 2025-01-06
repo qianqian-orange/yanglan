@@ -31,6 +31,7 @@ function FiberNode(tag, pendingProps) {
   this.memoizedState = null // 记录Hook链表数据
   this.lanes = NoLanes // 优先级标记
   this.updateQueue = null // 记录useEffect数据
+  this.ref = null // 记录useRef数据
 }
 
 export default FiberNode

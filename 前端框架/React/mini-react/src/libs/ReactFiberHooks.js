@@ -19,10 +19,6 @@ export let workInProgressHook = null
 export function renderWithHooks(current, workInProgress, Component, props) {
   // 记录当前FiberNode节点
   currentlyRenderingFiber = workInProgress
-  if (current !== null) {
-    // 记录旧FiberNode节点的useState hook链表
-    currentHook = current.memoizedState
-  }
   workInProgress.updateQueue = null
   // 调用组件方法获取child ReactElement
   const children = Component(props)
@@ -41,6 +37,24 @@ function Hook() {
 
 function mountWorkInProgressHook() {
   const hook = new Hook()
+  // 构建hook链表
+  if (workInProgressHook === null) {
+    currentlyRenderingFiber.memoizedState = workInProgressHook = hook
+  } else {
+    workInProgressHook = workInProgressHook.next = hook
+  }
+  return hook
+}
+
+function updateWorkInProgressHook() {
+  if (currentHook === null) {
+    currentHook = currentlyRenderingFiber.alternate.memoizedState
+  } else {
+    currentHook = currentHook.next
+  }
+  const hook = new Hook()
+  hook.memoizedState = currentHook.memoizedState
+  hook.queue = currentHook.queue
   // 构建hook链表
   if (workInProgressHook === null) {
     currentlyRenderingFiber.memoizedState = workInProgressHook = hook
@@ -75,9 +89,7 @@ function dispatchSetState(fiber, hook, action) {
     // 获取新state值
     const newState = basicStateReducer(currentState, action)
     // 如果state值相同则当前这次dispatch不需要触发更新
-    if (Object.is(currentState, newState)) {
-      return
-    }
+    if (Object.is(currentState, newState)) return
   }
   // 获取FiberRootNode对象
   const root = getRootForUpdatedFiber(fiber)
@@ -93,9 +105,7 @@ function dispatchSetState(fiber, hook, action) {
 // 首次调用组件方法useState处理逻辑
 function mountState(initialState) {
   // 如果传入的初始值是functIon，则调用执行获取返回值作为初始state值
-  if (typeof initialState === 'function') {
-    initialState = initialState()
-  }
+  if (typeof initialState === 'function') initialState = initialState()
   const hook = mountWorkInProgressHook()
   hook.memoizedState = initialState
   // 触发更新渲染方法
@@ -105,13 +115,12 @@ function mountState(initialState) {
 
 // 触发更新再次调用函数组件处理逻辑
 function updateReducer() {
-  const hook = mountWorkInProgressHook()
+  const hook = updateWorkInProgressHook()
   // 执行更新state方法逻辑，获取新的state值
-  hook.memoizedState = currentHook.queue.reduce(
+  hook.memoizedState = hook.queue.reduce(
     (state, action) => action(state),
-    currentHook.memoizedState,
+    hook.memoizedState,
   )
-  currentHook = currentHook.next
   const dispatch = dispatchSetState.bind(null, currentlyRenderingFiber, hook)
   // 返回新的state值和dispatch
   return [hook.memoizedState, dispatch]
@@ -153,8 +162,8 @@ function mountEffect(create, deps) {
 }
 
 function updateEffect(create, deps) {
-  const hook = mountWorkInProgressHook()
-  const effect = currentHook.memoizedState
+  const hook = updateWorkInProgressHook()
+  const effect = hook.memoizedState
   if (deps !== null && areHookInputsEqual(deps, effect.deps)) {
     hook.memoizedState = pushEffect(create, deps, effect.destroy)
     return
@@ -172,3 +181,25 @@ export function useEffect(create, deps = null) {
   }
 }
 /*****************************  useEffect end  *****************************/
+
+/*****************************  useRef start  *****************************/
+function mountRef(initialValue) {
+  const hook = mountWorkInProgressHook()
+  const ref = { current: initialValue }
+  return (hook.memoizedState = ref)
+}
+
+function updateRef() {
+  const hook = updateWorkInProgressHook()
+  return hook.memoizedState
+}
+
+export function useRef(initialValue = null) {
+  const current = currentlyRenderingFiber.alternate
+  if (current === null) {
+    return mountRef(initialValue)
+  } else {
+    return updateRef()
+  }
+}
+/*****************************  useRef end  *****************************/

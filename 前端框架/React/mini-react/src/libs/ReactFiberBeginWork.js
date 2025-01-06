@@ -5,8 +5,21 @@ import {
   HostText,
   NoLanes,
 } from './FiberNode'
+import { Ref } from './ReactFiberFlags'
 import { renderWithHooks } from './ReactFiberHooks'
 import { createWorkInProgress, reconcileChildren } from './ReactFiberReconciler'
+
+function markRef(current, workInProgress) {
+  if (workInProgress.ref === null) {
+    // 说明旧节点存在ref对象而新节点没有
+    if (current !== null && current.ref !== null) workInProgress.flags |= Ref
+  } else {
+    // 说明新节点ref对象有变更
+    if (current === null || current.ref !== workInProgress.ref) {
+      workInProgress.flags |= Ref
+    }
+  }
+}
 
 /**
  * @param {*} workInProgress FiberNode节点
@@ -19,9 +32,7 @@ function beginWork(workInProgress, renderLanes) {
     current.pendingProps === workInProgress.pendingProps &&
     (workInProgress.lanes & renderLanes) === NoLanes
   ) {
-    if (workInProgress.child === null) {
-      return null
-    }
+    if (workInProgress.child === null) return null
     let currentChild = workInProgress.child
     let newChild = createWorkInProgress(currentChild, currentChild.pendingProps)
     newChild.return = workInProgress
@@ -74,6 +85,7 @@ function beginWork(workInProgress, renderLanes) {
       ) {
         nextChildren = null
       }
+      markRef(current, workInProgress)
       // 创建child ReactElement对象对应的FiberNode节点
       return reconcileChildren(current, workInProgress, nextChildren)
     }

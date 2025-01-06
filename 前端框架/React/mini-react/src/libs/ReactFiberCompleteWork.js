@@ -4,23 +4,8 @@ import {
   HostRoot,
   HostText,
 } from './FiberNode'
+import { setInitialProperties } from './ReactDOMComponent'
 import { NoFlags, Update } from './ReactFiberFlags'
-
-// 设置DOM属性值
-export function setProp(el, key, value) {
-  switch (key) {
-    case 'children': {
-      if (typeof value === 'string' || typeof value === 'number') {
-        el.textContent = value
-      }
-      break
-    }
-    case 'onClick': {
-      el.onClick = value
-      break
-    }
-  }
-}
 
 export function appendAllChildren(el, workInProgress) {
   let nextChild = workInProgress.child
@@ -54,12 +39,12 @@ function completeWork(workInProgress) {
       bubbleProperties(workInProgress)
       return null
     case HostComponent: {
-      if (current != null) {
+      if (current !== null) {
         if (workInProgress.pendingProps) {
           workInProgress.flags |= Update
         }
         bubbleProperties(workInProgress)
-        return
+        return null
       }
       // 创建DOM节点
       const { elementType, pendingProps } = workInProgress
@@ -67,10 +52,7 @@ function completeWork(workInProgress) {
       // 将DOM节点赋值给FiberNode的stateNode属性
       workInProgress.stateNode = instance
       // 设置DOM节点属性
-      for (const propKey in pendingProps) {
-        const prpoValue = pendingProps[propKey]
-        setProp(instance, propKey, prpoValue)
-      }
+      setInitialProperties(instance, pendingProps)
       // 递归遍历FiberNode节点将对应的DOM节点添加到父DOM节点中，构建DOM树
       appendAllChildren(instance, workInProgress)
       // 收集子树FiberNode节点副作用

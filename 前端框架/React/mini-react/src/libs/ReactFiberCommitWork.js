@@ -4,58 +4,93 @@ import {
   HostRoot,
   HostText,
 } from './FiberNode'
-import { ChildDeletion, Passive, Placement, Update } from './ReactFiberFlags'
-import { appendAllChildren, setProp } from './ReactFiberCompleteWork'
+import {
+  ChildDeletion,
+  Passive,
+  Placement,
+  Ref,
+  Update,
+} from './ReactFiberFlags'
+import { appendAllChildren } from './ReactFiberCompleteWork'
+import { updateProperties } from './ReactDOMComponent'
 
-// 获取父DOM节点
-function getParentNode(finishWork) {
+let hostParent = null
+
+function getHostParentFiber(finishWork) {
   let parentFiber = finishWork.return
   while (parentFiber !== null) {
-    if (parentFiber.tag === FunctionComponent) {
-      parentFiber = parentFiber.return
-      continue
+    if (parentFiber.tag === HostComponent || parentFiber.tag === HostRoot) {
+      break
     }
-    break
+    parentFiber = parentFiber.return
   }
-  return parentFiber.tag === HostRoot
-    ? parentFiber.stateNode.containerInfo
-    : parentFiber.stateNode
-}
-
-// 获取子DOM节点
-function getChildrenNode(finishWork) {
-  let childFiber = finishWork.child
-  while (childFiber !== null) {
-    if (childFiber.tag === FunctionComponent) {
-      childFiber = childFiber.child
-      continue
-    }
-    break
-  }
-  return childFiber.stateNode
+  return parentFiber
 }
 
 function commitHostPlacement(finishWork) {
-  const parentNode = getParentNode(finishWork)
-  parentNode.appendChild(finishWork.stateNode)
-}
-
-function commitReconciliationEffects(finishWork) {
-  if (finishWork.flags & Placement) {
-    commitHostPlacement(finishWork)
+  const parentFiber = getHostParentFiber(finishWork)
+  let parentNode = parentFiber.tag === HostComponent ? parentFiber.stateNode : parentFiber.stateNode.containerInfo
+  if (finishWork.tag === FunctionComponent) {
+    appendAllChildren(parentNode, finishWork)
+  } else {
+    parentNode.appendChild(finishWork.stateNode)
   }
 }
 
+function commitReconciliationEffects(finishWork) {
+  if (finishWork.flags & Placement) commitHostPlacement(finishWork)
+}
+
+/*****************************  deletions start  *****************************/
+function recursivelyTraverseDeletionEffects(finishWork) {
+  let child = finishWork.child
+  while (child !== null) {
+    commitDeletionEffectsOnFiber(child)
+    child = child.sibling
+  }
+}
+
+function commitDeletionEffectsOnFiber(finishWork) {
+  switch (finishWork.tag) {
+    case HostComponent:
+      safelyDetachRef(finishWork)
+      hostParent.removeChild(finishWork.stateNode)
+      break
+    case HostText:
+      hostParent.removeChild(finishWork.stateNode)
+      break
+    default:
+      recursivelyTraverseDeletionEffects(finishWork)
+      break
+  }
+}
+
+function commitDeletionEffects(returnFiber, deletedFiber) {
+  // 获取deletedFiber节点的父DOM节点
+  let parentFiber = returnFiber
+  while (parentFiber !== null) {
+    switch (parentFiber.tag) {
+      case HostRoot:
+        hostParent = returnFiber.stateNode.containerInfo
+        break
+      case FunctionComponent:
+        parentFiber = parentFiber.return
+        break
+      case HostComponent:
+        hostParent = returnFiber.stateNode
+        break
+    }
+    if (hostParent !== null) break
+  }
+  commitDeletionEffectsOnFiber(deletedFiber)
+  hostParent = null
+}
+/*****************************  deletions end  *****************************/
+
 function recursivelyTraverseMutationEffects(finishWork) {
   if (finishWork.deletions !== null) {
-    const parentNode =
-      finishWork.tag === HostComponent
-        ? finishWork.stateNode
-        : getParentNode(finishWork)
-    // 将旧节点对应的DOM节点从DOM树移除
     finishWork.deletions.forEach((fiber) => {
-      const childNode = getChildrenNode(fiber)
-      parentNode.removeChild(childNode)
+      commitDeletionEffects(finishWork, fiber)
     })
   }
   // 为true说明子树FiberNode节点有副作用需要处理，递归遍历child FiberNode
@@ -77,25 +112,17 @@ export function commitMutationEffectsOnFiber(finishWork) {
     }
     case FunctionComponent: {
       recursivelyTraverseMutationEffects(finishWork)
-      // 为true则需要将对应DOM节点插入到父节点DOM中
-      if (finishWork.flags & Placement) {
-        // 获取父节点DOM
-        const parentNode = getParentNode(finishWork)
-        // 获取子节点对应的DOM
-        appendAllChildren(parentNode, finishWork)
-      }
+      commitReconciliationEffects(finishWork)
       break
     }
     case HostComponent: {
       recursivelyTraverseMutationEffects(finishWork)
       commitReconciliationEffects(finishWork)
+      if (finishWork.flags & Ref) safelyDetachRef(finishWork)
       // 更新DOM属性
       if (finishWork.flags & Update) {
-        const { pendingProps, stateNode } = finishWork
-        for (const propKey in pendingProps) {
-          const prpoValue = pendingProps[propKey]
-          setProp(stateNode, propKey, prpoValue)
-        }
+        const { pendingProps, stateNode, alternate } = finishWork
+        updateProperties(stateNode, pendingProps, alternate.pendingProps)
       }
       break
     }
@@ -110,7 +137,7 @@ export function commitMutationEffectsOnFiber(finishWork) {
   }
 }
 
-// 执行useEffect Unmount逻辑
+/*****************************  useEffect destroy start  *****************************/
 function commitHookPassiveUnmountEffects(finishWork) {
   const queue = finishWork.updateQueue
   if (queue !== null) {
@@ -171,8 +198,9 @@ function commitPassiveUnmountOnFiber(finishWork) {
     }
   }
 }
+/*****************************  useEffect destroy end  *****************************/
 
-// 执行useEffect Mount逻辑
+/*****************************  useEffect create start  *****************************/
 function commitHookPassiveMountEffects(finishWork) {
   const queue = finishWork.updateQueue
   queue.forEach((effect) => {
@@ -206,8 +234,45 @@ function commitPassiveMountOnFiber(finishWork) {
     }
   }
 }
-
+/*****************************  useEffect create end  *****************************/
 export function flushPassiveEffects(root) {
   commitPassiveUnmountOnFiber(root.current)
   commitPassiveMountOnFiber(root.current)
 }
+
+/*****************************  useRef start  *****************************/
+// 将ref.current赋值为null
+function safelyDetachRef(finishWork) {
+  if (finishWork !== null && finishWork.ref !== null)
+    finishWork.ref.current = null
+}
+
+function commitAttachRef(finishWork) {
+  const { ref, stateNode } = finishWork
+  if (ref !== null) ref.current = stateNode
+}
+
+function recursivelyTraverseLayoutEffects(finishWork) {
+  if (finishWork.subtreeFlags & Ref) {
+    let child = finishWork.child
+    while (child !== null) {
+      commitLayoutEffectOnFiber(child)
+      child = child.sibling
+    }
+  }
+}
+
+export function commitLayoutEffectOnFiber(finishWork) {
+  switch (finishWork.tag) {
+    case HostComponent: {
+      recursivelyTraverseLayoutEffects(finishWork)
+      if (finishWork.flags & Ref) commitAttachRef(finishWork)
+      break
+    }
+    default: {
+      recursivelyTraverseLayoutEffects(finishWork)
+      break
+    }
+  }
+}
+/*****************************  useRef end  *****************************/

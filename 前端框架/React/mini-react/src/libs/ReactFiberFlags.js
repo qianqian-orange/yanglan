@@ -6,5 +6,7 @@ export const Placement = 2
 export const Update = 4
 // 表示该FiberNode节点有子节点要删除
 export const ChildDeletion = 16
-
+// 表示该FiberNode节点有useEffect处理逻辑
 export const Passive = 2048
+// 表示该FiberNode节点有useRef处理逻辑
+export const Ref = 512
