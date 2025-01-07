@@ -1,6 +1,10 @@
 import { HostRoot, NoLanes, SyncLane } from './FiberNode'
-import { Passive } from './ReactFiberFlags'
+import {
+  Passive as PassiveEffect,
+  Update as UpdateEffect,
+} from './ReactFiberFlags'
 import { ensureRootIsScheduled } from './ReactFiberRootScheduler'
+import { HookHasEffect, HookLayout, HookPassive } from './ReactHookEffectFlags'
 
 // 记录当前FiberNode节点
 export let currentlyRenderingFiber = null
@@ -31,13 +35,25 @@ export function renderWithHooks(current, workInProgress, Component, props) {
 // 每次调用React Hook方法都会创建一个Hook对象，通过next指针进行索引，构建单链表结构
 function Hook() {
   this.memoizedState = null // 记录hook数据
-  this.next = null // 记录下一个hook
+  this.next = null // 记录下一个Hook对象
+  this.reducer = null // 更新state方法
   this.queue = [] // 收集更新state方法
+}
+
+function Ref(initialValue) {
+  this.current = initialValue
+}
+
+function Effect(tag, create, deps, destroy) {
+  this.tag = tag
+  this.create = create
+  this.deps = deps
+  this.destroy = destroy
 }
 
 function mountWorkInProgressHook() {
   const hook = new Hook()
-  // 构建hook链表
+  // 构建Hook链表
   if (workInProgressHook === null) {
     currentlyRenderingFiber.memoizedState = workInProgressHook = hook
   } else {
@@ -54,6 +70,7 @@ function updateWorkInProgressHook() {
   }
   const hook = new Hook()
   hook.memoizedState = currentHook.memoizedState
+  hook.reducer = currentHook.reducer
   hook.queue = currentHook.queue
   // 构建hook链表
   if (workInProgressHook === null) {
@@ -79,22 +96,24 @@ function basicStateReducer(state, action) {
 /*****************************  useState start  *****************************/
 /**
  * @param {*} fiber FiberNode节点
- * @param {*} hook useState hook链表节点
+ * @param {*} hook hook链表节点
  * @param {*} action 调用dispatch方法时传入的值
  */
 function dispatchSetState(fiber, hook, action) {
+  // 获取更新state方法
+  const reducer = hook.reducer
   if (fiber.lanes === NoLanes) {
     // 获取旧state值
     const currentState = hook.memoizedState
     // 获取新state值
-    const newState = basicStateReducer(currentState, action)
+    const newState = reducer(currentState, action)
     // 如果state值相同则当前这次dispatch不需要触发更新
     if (Object.is(currentState, newState)) return
   }
   // 获取FiberRootNode对象
   const root = getRootForUpdatedFiber(fiber)
   // 收集更新state的方法，在创建新FiberNode节点时执行
-  hook.queue.push((state) => basicStateReducer(state, action))
+  hook.queue.push((state) => reducer(state, action))
   root.pendingLanes = SyncLane
   fiber.lanes = SyncLane
   if (fiber.alternate !== null) fiber.alternate.lanes = SyncLane
@@ -106,8 +125,12 @@ function dispatchSetState(fiber, hook, action) {
 function mountState(initialState) {
   // 如果传入的初始值是functIon，则调用执行获取返回值作为初始state值
   if (typeof initialState === 'function') initialState = initialState()
+  // 创建Hook对象，构建Hook链表
   const hook = mountWorkInProgressHook()
+  // 记录state初始值
   hook.memoizedState = initialState
+  // 记录更新state方法
+  hook.reducer = basicStateReducer
   // 触发更新渲染方法
   const dispatch = dispatchSetState.bind(null, currentlyRenderingFiber, hook)
   return [hook.memoizedState, dispatch]
@@ -121,6 +144,7 @@ function updateReducer() {
     (state, action) => action(state),
     hook.memoizedState,
   )
+  hook.queue = []
   const dispatch = dispatchSetState.bind(null, currentlyRenderingFiber, hook)
   // 返回新的state值和dispatch
   return [hook.memoizedState, dispatch]
@@ -137,6 +161,7 @@ export function useState(initialState) {
 /*****************************  useState end  *****************************/
 
 /*****************************  useEffect start  *****************************/
+// 通过Object.is方法比对deps属性值是否变更
 function areHookInputsEqual(nextDeps, prevDeps) {
   for (let i = 0; i < nextDeps.length; i++) {
     if (!Object.is(nextDeps[i], prevDeps[i])) {
@@ -146,8 +171,14 @@ function areHookInputsEqual(nextDeps, prevDeps) {
   return true
 }
 
-function pushEffect(create, deps, destroy = null) {
-  const effect = { create, deps, destroy }
+/**
+ * @param {*} tag HookFlags类型
+ * @param {*} create 入参执行函数
+ * @param {*} deps 入参依赖
+ * @param {*} destroy 入参执行函数返回值
+ */
+function pushEffect(tag, create, deps, destroy = null) {
+  const effect = new Effect(tag, create, deps, destroy)
   if (currentlyRenderingFiber.updateQueue === null)
     currentlyRenderingFiber.updateQueue = []
   const queue = currentlyRenderingFiber.updateQueue
@@ -155,21 +186,50 @@ function pushEffect(create, deps, destroy = null) {
   return effect
 }
 
-function mountEffect(create, deps) {
+/**
+ * @param {*} fiberFlags FiberNode节点副作用
+ * @param {*} hookFlags Effect类型
+ * @param {*} create 入参执行函数
+ * @param {*} deps 入参依赖
+ */
+function mountEffectImpl(fiberFlags, hookFlags, create, deps) {
+  // 创建Hook对象，构建Hook单链表
   const hook = mountWorkInProgressHook()
-  currentlyRenderingFiber.flags |= Passive
-  hook.memoizedState = pushEffect(create, deps)
+  currentlyRenderingFiber.flags |= fiberFlags
+  hook.memoizedState = pushEffect(hookFlags | HookHasEffect, create, deps)
+}
+
+/**
+ * @param {*} fiberFlags FiberNode节点副作用
+ * @param {*} hookFlags Effect类型
+ * @param {*} create 入参执行函数
+ * @param {*} deps 入参依赖
+ */
+function updateEffectImpl(fiberFlags, hookFlags, create, deps) {
+  // 创建Hook对象，构建Hook单链表
+  const hook = updateWorkInProgressHook()
+  // 获取旧Effect对象
+  const effect = hook.memoizedState
+  // 判断新旧Effect deps是否相同
+  if (deps !== null && areHookInputsEqual(deps, effect.deps)) {
+    hook.memoizedState = pushEffect(
+      hookFlags | HookHasEffect,
+      create,
+      deps,
+      effect.destroy,
+    )
+    return
+  }
+  currentlyRenderingFiber.flags |= fiberFlags
+  hook.memoizedState = pushEffect(hookFlags | HookHasEffect, create, deps)
+}
+
+function mountEffect(create, deps) {
+  mountEffectImpl(PassiveEffect, HookPassive, create, deps)
 }
 
 function updateEffect(create, deps) {
-  const hook = updateWorkInProgressHook()
-  const effect = hook.memoizedState
-  if (deps !== null && areHookInputsEqual(deps, effect.deps)) {
-    hook.memoizedState = pushEffect(create, deps, effect.destroy)
-    return
-  }
-  currentlyRenderingFiber.flags |= Passive
-  hook.memoizedState = pushEffect(create, deps)
+  updateEffectImpl(PassiveEffect, HookPassive, create, deps)
 }
 
 export function useEffect(create, deps = null) {
@@ -180,12 +240,29 @@ export function useEffect(create, deps = null) {
     updateEffect(create, deps)
   }
 }
+
+function mountLayoutEffect(create, deps) {
+  mountEffectImpl(UpdateEffect, HookLayout, create, deps)
+}
+
+function updateLayoutEffect(create, deps) {
+  updateEffectImpl(UpdateEffect, HookLayout, create, deps)
+}
+
+export function useLayoutEffect(create, deps = null) {
+  const current = currentlyRenderingFiber.alternate
+  if (current === null) {
+    mountLayoutEffect(create, deps)
+  } else {
+    updateLayoutEffect(create, deps)
+  }
+}
 /*****************************  useEffect end  *****************************/
 
 /*****************************  useRef start  *****************************/
 function mountRef(initialValue) {
   const hook = mountWorkInProgressHook()
-  const ref = { current: initialValue }
+  const ref = new Ref(initialValue)
   return (hook.memoizedState = ref)
 }
 

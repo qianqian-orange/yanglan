@@ -112,6 +112,8 @@ function commitRoot(root) {
   const finishWork = root.current.alternate
   // 递归遍历FiberNode节点，执行对应副作用处理逻辑
   commitMutationEffectsOnFiber(finishWork)
+  // 1. 调用useLayoutEffect create方法
+  // 2. 将DOM节点赋值给ref.current属性
   commitLayoutEffectOnFiber(finishWork)
   // 将FiberRootNode对象current属性指向最新的FiiberNode Tree根节点
   root.current = finishWork
