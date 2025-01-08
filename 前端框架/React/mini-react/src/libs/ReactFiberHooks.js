@@ -8,14 +8,13 @@ import { HookHasEffect, HookLayout, HookPassive } from './ReactHookEffectFlags'
 
 // 记录当前FiberNode节点
 export let currentlyRenderingFiber = null
-// 记录旧FiberNode节点的useState hook链表节点
+// 记录旧Hook对象
 export let currentHook = null
-// 记录新FiberNode节点useState hook链表节点
+// 记录新Hook对象
 export let workInProgressHook = null
 
 // 组件方法调用装饰器，在调用组件方法前后做一些逻辑处理
 /**
- * @param {*} current 旧FiberNode节点
  * @param {*} workInProgress 新FiberNode节点
  * @param {*} Component 函数组件方法
  * @param {*} props 函数组件方法入参属性
@@ -53,6 +52,7 @@ function Effect(tag, create, deps, destroy) {
 }
 
 function mountWorkInProgressHook() {
+  // 创建Hook对象
   const hook = new Hook()
   // 构建Hook链表
   if (workInProgressHook === null) {
@@ -64,11 +64,13 @@ function mountWorkInProgressHook() {
 }
 
 function updateWorkInProgressHook() {
+  // 获取旧Hook对象
   if (currentHook === null) {
     currentHook = currentlyRenderingFiber.alternate.memoizedState
   } else {
     currentHook = currentHook.next
   }
+  // 创建新Hook对象，复制旧Hook对象属性值
   const hook = new Hook()
   hook.memoizedState = currentHook.memoizedState
   hook.reducer = currentHook.reducer
@@ -188,9 +190,11 @@ function areHookInputsEqual(nextDeps, prevDeps) {
  * @param {*} destroy 入参执行函数返回值
  */
 function pushEffect(tag, create, deps, destroy = null) {
+  // 创建Efect对象
   const effect = new Effect(tag, create, deps, destroy)
   if (currentlyRenderingFiber.updateQueue === null)
     currentlyRenderingFiber.updateQueue = []
+  // 将Effect对象保存到新节点的updateQueue属性
   const queue = currentlyRenderingFiber.updateQueue
   queue.push(effect)
   return effect
@@ -203,9 +207,11 @@ function pushEffect(tag, create, deps, destroy = null) {
  * @param {*} deps 入参依赖
  */
 function mountEffectImpl(fiberFlags, hookFlags, create, deps) {
-  // 创建Hook对象，构建Hook单链表
+  // 创建Hook对象，构建Hook链表
   const hook = mountWorkInProgressHook()
+  // 修改新节点的flags属性值
   currentlyRenderingFiber.flags |= fiberFlags
+  // 将Effect对象保存到Hook对象的memoizedState属性
   hook.memoizedState = pushEffect(hookFlags | HookHasEffect, create, deps)
 }
 
@@ -230,7 +236,9 @@ function updateEffectImpl(fiberFlags, hookFlags, create, deps) {
     )
     return
   }
+  // 修改新节点flags属性值
   currentlyRenderingFiber.flags |= fiberFlags
+  // 将Effect对象保存到Hook对象的memoizedState属性
   hook.memoizedState = pushEffect(hookFlags | HookHasEffect, create, deps)
 }
 
@@ -271,7 +279,9 @@ export function useLayoutEffect(create, deps = null) {
 
 /*****************************  useRef start  *****************************/
 function mountRef(initialValue) {
+  // 创建Hook对象，构建Hook链表
   const hook = mountWorkInProgressHook()
+  // 创建Ref对象
   const ref = new Ref(initialValue)
   return (hook.memoizedState = ref)
 }
@@ -291,3 +301,40 @@ export function useRef(initialValue = null) {
   }
 }
 /*****************************  useRef end  *****************************/
+
+/*****************************  useMemo start  *****************************/
+function mountMemo(nextCreate, deps) {
+  // 创建Hook对象，构建Hook单链表
+  const hook = mountWorkInProgressHook()
+  // 调用nextCreate方法获取初始值
+  const nextValue = nextCreate()
+  // 将初始值和deps保存到Hook对象的memoizedState属性中
+  hook.memoizedState = [nextValue, deps]
+  return nextValue
+}
+
+function updateMemo(nextCreate, deps) {
+  // 创建Hook对象，复制旧Hook对象属性值，构建Hook链表
+  const hook = updateWorkInProgressHook()
+  // 获取旧值和依赖deps
+  const [prevValue, prevDeps] = hook.memoizedState
+  // 比对新旧deps是否相同，相同则直接返回旧值
+  if (deps !== null && areHookInputsEqual(deps, prevDeps)) {
+    return prevValue
+  }
+  // 重新调用nextCreate方法获取新值
+  const nextValue = nextCreate()
+  // 将新值和deps保存到Hook对象的memoizedState属性中
+  hook.memoizedState = [nextValue, deps]
+  return nextValue
+}
+
+export function useMemo(nextCreate, deps = null) {
+  const current = currentlyRenderingFiber.alternate
+  if (current === null) {
+    return mountMemo(nextCreate, deps)
+  } else {
+    return updateMemo(nextCreate, deps)
+  }
+}
+/*****************************  useMemo end  *****************************/

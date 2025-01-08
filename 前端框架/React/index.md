@@ -65,7 +65,32 @@
   const [count, setCount] = useState(getCount);
   ```
 
+### 1.2 useEffect
+
+- 采用深度优先遍历算法调用 useEffect 的 setup 和 destroy
+- 通过 Object.is 方法比较 deps
+- 页面渲染完成之后执行
+
+### 1.3 useRef
+
+- 更改 ref 值不会触发更新渲染
+
+### 1.4 useLayoutEffect
+
+- 采用深度优先遍历算法调用 useLayoutEffect 的 setup 和 destroy
+- 通过 Object.is 方法比较 deps
+- 页面渲染完成之前执行
+
 ## 二. 原理
 
-2.1 [手写 mini React，理解 React 渲染原理](https://juejin.cn/post/7455612245768241192)
-2.2 [手写 React useState，理解 useState 原理](https://juejin.cn/post/7456265285852299264)
+#### 2.1 [手写 mini React，理解 React 渲染原理](https://juejin.cn/post/7455612245768241192)
+
+#### 2.2 [手写 React useState，理解 useState 原理](https://juejin.cn/post/7456265285852299264)
+
+#### 2.3 [手写 React useEffect, 理解 useEffect 原理](https://juejin.cn/post/7456647661548453940)
+
+#### 2.4 [手写 React useLayoutEffect, 理解 useLayoutEffect 原理](https://juejin.cn/post/7457151932395913216)
+
+#### 2.5 [手写 React useRef，理解 useRef 原理](https://juejin.cn/post/7456796962119450658)
+
+#### 2.6 [手写 React useReducer，理解 useReducer 原理](https://juejin.cn/post/7457434262561112098)
