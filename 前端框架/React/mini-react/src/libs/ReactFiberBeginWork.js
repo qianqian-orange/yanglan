@@ -68,7 +68,6 @@ function beginWork(workInProgress, renderLanes) {
       const Component = workInProgress.elementType
       // 调用组件方法获取child ReactElement对象
       const nextChildren = renderWithHooks(
-        current,
         workInProgress,
         Component,
         workInProgress.pendingProps,

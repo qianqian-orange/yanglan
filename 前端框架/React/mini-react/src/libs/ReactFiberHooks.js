@@ -20,9 +20,10 @@ export let workInProgressHook = null
  * @param {*} Component 函数组件方法
  * @param {*} props 函数组件方法入参属性
  */
-export function renderWithHooks(current, workInProgress, Component, props) {
+export function renderWithHooks(workInProgress, Component, props) {
   // 记录当前FiberNode节点
   currentlyRenderingFiber = workInProgress
+  // 将FiberNode节点的updateQueue属性赋值为null，重新收集useEffect、useLayoutEffect、useInsertionEffect数据
   workInProgress.updateQueue = null
   // 调用组件方法获取child ReactElement
   const children = Component(props)
@@ -32,9 +33,9 @@ export function renderWithHooks(current, workInProgress, Component, props) {
   return children
 }
 
-// 每次调用React Hook方法都会创建一个Hook对象，通过next指针进行索引，构建单链表结构
+// 每次调用React Hook方法都会创建一个Hook对象，多个Hook对象之间通过next指针进行索引，构成单链表数据结构
 function Hook() {
-  this.memoizedState = null // 记录hook数据
+  this.memoizedState = null // 记录Hook数据
   this.next = null // 记录下一个Hook对象
   this.reducer = null // 更新state方法
   this.queue = [] // 收集更新state方法
@@ -72,7 +73,7 @@ function updateWorkInProgressHook() {
   hook.memoizedState = currentHook.memoizedState
   hook.reducer = currentHook.reducer
   hook.queue = currentHook.queue
-  // 构建hook链表
+  // 构建Hook链表
   if (workInProgressHook === null) {
     currentlyRenderingFiber.memoizedState = workInProgressHook = hook
   } else {
@@ -121,8 +122,7 @@ function dispatchSetState(fiber, hook, action) {
   ensureRootIsScheduled(root)
 }
 
-// 首次调用组件方法useState处理逻辑
-function mountState(initialState) {
+function mountReducer(reducer, initialState) {
   // 如果传入的初始值是functIon，则调用执行获取返回值作为初始state值
   if (typeof initialState === 'function') initialState = initialState()
   // 创建Hook对象，构建Hook链表
@@ -130,30 +130,40 @@ function mountState(initialState) {
   // 记录state初始值
   hook.memoizedState = initialState
   // 记录更新state方法
-  hook.reducer = basicStateReducer
-  // 触发更新渲染方法
+  hook.reducer = reducer
+  // 获取触发更新渲染方法
   const dispatch = dispatchSetState.bind(null, currentlyRenderingFiber, hook)
   return [hook.memoizedState, dispatch]
 }
 
-// 触发更新再次调用函数组件处理逻辑
 function updateReducer() {
+  // 创建Hook对象，复制旧Hook对象属性值，构建Hook链表
   const hook = updateWorkInProgressHook()
   // 执行更新state方法逻辑，获取新的state值
   hook.memoizedState = hook.queue.reduce(
     (state, action) => action(state),
     hook.memoizedState,
   )
+  // 清空队列，重新收集更新state方法
   hook.queue = []
+  // 获取触发更新渲染方法
   const dispatch = dispatchSetState.bind(null, currentlyRenderingFiber, hook)
-  // 返回新的state值和dispatch
   return [hook.memoizedState, dispatch]
 }
 
 export function useState(initialState) {
   const current = currentlyRenderingFiber.alternate
   if (current === null) {
-    return mountState(initialState)
+    return mountReducer(basicStateReducer, initialState)
+  } else {
+    return updateReducer()
+  }
+}
+
+export function useReducer(reducer, initialState) {
+  const current = currentlyRenderingFiber.alternate
+  if (current === null) {
+    return mountReducer(reducer, initialState)
   } else {
     return updateReducer()
   }
@@ -206,7 +216,7 @@ function mountEffectImpl(fiberFlags, hookFlags, create, deps) {
  * @param {*} deps 入参依赖
  */
 function updateEffectImpl(fiberFlags, hookFlags, create, deps) {
-  // 创建Hook对象，构建Hook单链表
+  // 创建Hook对象，复制旧Hook对象属性值，构建Hook链表
   const hook = updateWorkInProgressHook()
   // 获取旧Effect对象
   const effect = hook.memoizedState
@@ -267,6 +277,7 @@ function mountRef(initialValue) {
 }
 
 function updateRef() {
+  // 创建Hook对象，复制旧Hook对象属性值，构建Hook链表
   const hook = updateWorkInProgressHook()
   return hook.memoizedState
 }
