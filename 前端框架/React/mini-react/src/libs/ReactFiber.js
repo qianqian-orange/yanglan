@@ -1,19 +1,5 @@
 import { NoFlags } from './ReactFiberFlags'
-
-// 根FiberNode节点对应类型
-export const HostRoot = 3
-// 组件方法FiberNode节点对应类型
-export const FunctionComponent = 0
-// 元素标签FiberNode节点对应类型
-export const HostComponent = 5
-// 纯文本FiberNode节点对应类型
-export const HostText = 6
-
-export const NoLanes = 0
-
-export const DefaultLane = 32
-
-export const SyncLane = 2
+import { NoLanes } from './ReactFiberLane'
 
 function FiberNode(tag, pendingProps) {
   this.tag = tag // FiberNode节点类型

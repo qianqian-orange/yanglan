@@ -65,21 +65,31 @@
   const [count, setCount] = useState(getCount);
   ```
 
-### 1.2 useEffect
+### 1.2 useReducer
+`useReducer`方法接收两个参数，第一个参数是`reducer function`，执行变更`state`的代码逻辑，第二个参数是`state`初始值
 
-- 采用深度优先遍历算法调用 useEffect 的 setup 和 destroy
-- 通过 Object.is 方法比较 deps
-- 页面渲染完成之后执行
+`useReducer`方法返回一个数组，第一个数组元素是`state`，第二个数组元素是触发更新渲染方法
 
-### 1.3 useRef
+### 1.3 useEffect
+`useEffect`方法接收两个参数，第一个是执行函数`create`，第二个是依赖`deps`，在首次渲染时会执行一次`create`方法，在下次渲染时会比对`deps`值是否变更，如果有会再次执行`create`方法
 
-- 更改 ref 值不会触发更新渲染
+我们可以在`create`方法里返回一个函数`destroy`，`destroy`方法会在`deps`值发生变化或组件卸载时执行。
 
 ### 1.4 useLayoutEffect
+`useLayoutEffect`方法接收两个参数，第一个是执行函数`create`，第二个是依赖`deps`，在首次渲染时会执行一次`create`方法，在下次渲染时会比对`deps`值是否变更，如果有会再次执行`create`方法。
 
-- 采用深度优先遍历算法调用 useLayoutEffect 的 setup 和 destroy
-- 通过 Object.is 方法比较 deps
-- 页面渲染完成之前执行
+我们可以在`create`方法里返回一个函数`destroy`，`destroy`方法会在`deps`值发生变化或组件卸载时执行。
+
+与`useEffect`差异点是执行时机不同：`useEffect`是页面完成渲染之后执行，`useLayoutEffect`是页面完成渲染之前执行。
+
+### 1.5 useRef
+`useRef`方法接收一个可选初始值入参，会赋值给`ref`的`current`属性，可以通过`ref.current`获取属性值或修改属性值，需要注意的是修改`ref.current`属性值不会触发更新渲染逻辑
+
+### 1.6 useMemo
+`useMemo`方法接收两个参数，第一个参数是执行函数`nextCreate`，第二个参数是依赖`deps`，首次渲染会调用`nextCreate`方法获取返回值，更新渲染会比对`deps`是否想通过，不相同会重新调用`nextCreate`方法获取新的返回值。
+
+### 1.7 useCallback
+`useCallback`方法接收两个参数，第一个参数是`cache function`，第二个参数是依赖`deps`，首次渲染调用会直接返回`cache function`，更新渲染会比对`deps`是否相同，不相同返回新的`cache function`
 
 ## 二. 原理
 

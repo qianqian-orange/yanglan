@@ -1,9 +1,6 @@
-import FiberNode, {
-  FunctionComponent,
-  HostComponent,
-  HostText,
-} from './FiberNode'
+import FiberNode from './ReactFiber'
 import { ChildDeletion, Placement } from './ReactFiberFlags'
+import { FunctionComponent, HostComponent, HostText } from './ReactWorkTags'
 import { createWorkInProgress } from './ReactFiberReconciler'
 
 function coerceRef(fiber, element) {

@@ -3,7 +3,7 @@ import {
   HostComponent,
   HostRoot,
   HostText,
-} from './FiberNode'
+} from './ReactWorkTags'
 import { setInitialProperties } from './ReactDOMComponent'
 import { NoFlags, Update } from './ReactFiberFlags'
 

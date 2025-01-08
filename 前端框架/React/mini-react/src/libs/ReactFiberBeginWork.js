@@ -3,8 +3,8 @@ import {
   HostComponent,
   HostRoot,
   HostText,
-  NoLanes,
-} from './FiberNode'
+} from './ReactWorkTags'
+import { NoLanes } from './ReactFiberLane'
 import { Ref } from './ReactFiberFlags'
 import { renderWithHooks } from './ReactFiberHooks'
 import { createWorkInProgress, reconcileChildren } from './ReactFiberReconciler'

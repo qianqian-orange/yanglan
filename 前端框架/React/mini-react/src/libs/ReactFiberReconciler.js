@@ -1,4 +1,4 @@
-import FiberNode, { NoLanes } from './FiberNode'
+import FiberNode from './ReactFiber'
 import { mountChildFibers, reconcileChildFibers } from './ReactChildFiber'
 import { beginWork } from './ReactFiberBeginWork'
 import {
@@ -8,6 +8,7 @@ import {
 } from './ReactFiberCommitWork'
 import { completeWork } from './ReactFiberCompleteWork'
 import { NoFlags } from './ReactFiberFlags'
+import { NoLanes } from './ReactFiberLane'
 
 let workInProgress = null
 let renderLanes = NoLanes

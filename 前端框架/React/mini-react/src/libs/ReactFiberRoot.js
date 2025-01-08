@@ -1,4 +1,6 @@
-import FiberNode, { HostRoot, NoLanes } from './FiberNode'
+import FiberNode from './ReactFiber'
+import { NoLanes } from './ReactFiberLane'
+import { HostRoot } from './ReactWorkTags'
 
 /**
  * @param {*} element DOM节点

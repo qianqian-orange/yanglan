@@ -3,7 +3,7 @@ import {
   HostComponent,
   HostRoot,
   HostText,
-} from './FiberNode'
+} from './ReactWorkTags'
 import {
   ChildDeletion,
   Passive,
@@ -261,6 +261,7 @@ function commitPassiveMountOnFiber(finishWork) {
   }
 }
 /*****************************  useEffect create end  *****************************/
+
 export function flushPassiveEffects(root) {
   commitPassiveUnmountOnFiber(root.current)
   commitPassiveMountOnFiber(root.current)

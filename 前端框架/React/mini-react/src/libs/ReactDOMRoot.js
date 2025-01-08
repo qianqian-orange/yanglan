@@ -1,5 +1,5 @@
-import { DefaultLane } from './FiberNode'
-import FiberRootNode from './FiberRootNode'
+import { DefaultLane } from './ReactFiberLane'
+import FiberRootNode from './ReactFiberRoot'
 import { performWorkOnRoot } from './ReactFiberReconciler'
 
 /**
