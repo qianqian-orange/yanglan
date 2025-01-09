@@ -8,3 +8,4 @@ export const HostComponent = 5
 export const HostText = 6
 // memo组件
 export const MemoComponent = 14
+export const SimpleMemoComponent = 15

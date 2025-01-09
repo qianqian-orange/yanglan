@@ -1,7 +1,12 @@
-import FiberNode from './ReactFiber'
+import FiberNode, { createWorkInProgress } from './ReactFiber'
 import { ChildDeletion, Placement } from './ReactFiberFlags'
-import { FunctionComponent, HostComponent, HostText } from './ReactWorkTags'
-import { createWorkInProgress } from './ReactFiberReconciler'
+import {
+  FunctionComponent,
+  HostComponent,
+  HostText,
+  MemoComponent,
+} from './ReactWorkTags'
+import { REACT_MEMO_TYPE } from './ReactSymbol'
 
 function coerceRef(fiber, element) {
   const ref = element.props.ref
@@ -45,16 +50,25 @@ function createChildReconciler(shouldTrackSideEffects) {
   }
 
   // 创建ReactElement对应的FiberNode节点
-  function createFiberFormElement(element) {
-    let fiber
-    if (typeof element.type === 'function') {
-      fiber = new FiberNode(FunctionComponent, element.props)
+  function createFiberFromElement(element) {
+    let fiberTag
+    const { type } = element
+    if (typeof type === 'function') {
+      fiberTag = FunctionComponent
+    } else if (typeof type === 'string') {
+      fiberTag = HostComponent
     } else {
-      fiber = new FiberNode(HostComponent, element.props)
+      // memo类型FiberNode节点 
+      switch (type.$$typeof) {
+        case REACT_MEMO_TYPE:
+          fiberTag = MemoComponent
+          break
+      }
     }
-    coerceRef(fiber, element)
+    const fiber = new FiberNode(fiberTag, element.props)
     fiber.key = element.key
-    fiber.elementType = element.type
+    fiber.elementType = type
+    coerceRef(fiber, element)
     return fiber
   }
 
@@ -92,7 +106,7 @@ function createChildReconciler(shouldTrackSideEffects) {
       return fiber
     }
     deleteChild(returnFiber, oldFiber)
-    const fiber = createFiberFormElement(newChild)
+    const fiber = createFiberFromElement(newChild)
     fiber.return = returnFiber
     return placeChild(fiber)
   }
@@ -113,7 +127,7 @@ function createChildReconciler(shouldTrackSideEffects) {
           coerceRef(nextFiber, newChild[newIdx])
         } else {
           deleteChild(returnFiber, oldFiber, false)
-          nextFiber = placeChild(createFiberFormElement(newChild[newIdx]))
+          nextFiber = placeChild(createFiberFromElement(newChild[newIdx]))
         }
       } else if (
         typeof newChild[newIdx] === 'string' ||

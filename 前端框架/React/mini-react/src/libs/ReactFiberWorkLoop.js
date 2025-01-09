@@ -1,5 +1,4 @@
-import FiberNode from './ReactFiber'
-import { mountChildFibers, reconcileChildFibers } from './ReactChildFiber'
+import { createWorkInProgress } from './ReactFiber'
 import { beginWork } from './ReactFiberBeginWork'
 import {
   commitLayoutEffectOnFiber,
@@ -7,56 +6,20 @@ import {
   flushPassiveEffects,
 } from './ReactFiberCommitWork'
 import { completeWork } from './ReactFiberCompleteWork'
-import { NoFlags } from './ReactFiberFlags'
 import { NoLanes } from './ReactFiberLane'
+import { PassiveMask } from './ReactFiberFlags'
+
+export const NoContext = 0
+export const RenderContext = 2
+export const CommitContext = 4
+
+let executionContext = NoContext
 
 let workInProgress = null
 let renderLanes = NoLanes
 
-/**
- * @param {*} current FiberNode节点
- * @param {*} pendingProps 对应ReactElement对象的props
- */
-export function createWorkInProgress(current, pendingProps) {
-  let workInProgress = current.alternate
-  if (workInProgress !== null) {
-    workInProgress.flags = NoFlags
-    workInProgress.subtreeFlags = NoFlags
-    workInProgress.deletions = null
-    workInProgress.pendingProps = pendingProps
-  } else {
-    workInProgress = new FiberNode(current.tag, pendingProps)
-    workInProgress.alternate = current
-    current.alternate = workInProgress
-  }
-  workInProgress.key = current.key
-  workInProgress.elementType = current.elementType
-  workInProgress.child = current.child
-  workInProgress.sibling = current.sibling
-  workInProgress.stateNode = current.stateNode
-  workInProgress.memoizedState = current.memoizedState
-  workInProgress.lanes = current.lanes
-  workInProgress.updateQueue = current.updateQueue
-  workInProgress.ref = current.ref
-  return workInProgress
-}
-
-/**
- * @param {*} current 旧FiberNode节点
- * @param {*} workInProgress FiberNode节点
- * @param {*} nextChildren child ReactElement对象
- */
-export function reconcileChildren(current, workInProgress, nextChildren) {
-  if (current === null) {
-    workInProgress.child = mountChildFibers(workInProgress, null, nextChildren)
-  } else {
-    workInProgress.child = reconcileChildFibers(
-      workInProgress,
-      current.child,
-      nextChildren,
-    )
-  }
-  return workInProgress.child
+export function getExecutionContext() {
+  return executionContext
 }
 
 /**
@@ -96,6 +59,7 @@ function performUnitOfWork(unitOfWork) {
  * @param {*} root FiberRootNode对象
  */
 function renderRootSync(root, lanes) {
+  executionContext |= RenderContext
   renderLanes = lanes
   const current = root.current
   // 创建根FiberNode副本节点，赋值给workInProgress
@@ -104,12 +68,14 @@ function renderRootSync(root, lanes) {
   while (workInProgress !== null) {
     performUnitOfWork(workInProgress)
   }
+  executionContext = NoContext
 }
 
 /**
  * @param {*} root FiberRootNode
  */
 function commitRoot(root) {
+  executionContext = CommitContext
   const finishWork = root.current.alternate
   // 递归遍历FiberNode节点，执行对应副作用处理逻辑
   commitMutationEffectsOnFiber(finishWork)
@@ -118,10 +84,13 @@ function commitRoot(root) {
   commitLayoutEffectOnFiber(finishWork)
   // 将FiberRootNode对象current属性指向最新的FiiberNode Tree根节点
   root.current = finishWork
-  // 执行useEffect
-  queueMicrotask(() => {
-    flushPassiveEffects(root)
-  })
+  if (finishWork.subtreeFlags & PassiveMask) {
+    // 执行useEffect
+    queueMicrotask(() => {
+      flushPassiveEffects(root)
+    })
+  }
+  executionContext = NoContext
 }
 
 /**

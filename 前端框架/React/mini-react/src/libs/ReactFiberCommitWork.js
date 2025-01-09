@@ -3,10 +3,12 @@ import {
   HostComponent,
   HostRoot,
   HostText,
+  MemoComponent,
 } from './ReactWorkTags'
 import {
   ChildDeletion,
   Passive,
+  PassiveMask,
   Placement,
   Ref,
   Update,
@@ -123,6 +125,7 @@ export function commitMutationEffectsOnFiber(finishWork) {
       recursivelyTraverseMutationEffects(finishWork)
       break
     }
+    case MemoComponent:
     case FunctionComponent: {
       recursivelyTraverseMutationEffects(finishWork)
       commitReconciliationEffects(finishWork)
@@ -197,7 +200,7 @@ function recursivelyTraversePassiveUnmountEffects(finishWork) {
       }
     }
   }
-  if (finishWork.subtreeFlags & (Passive | ChildDeletion)) {
+  if (finishWork.subtreeFlags & PassiveMask) {
     let child = finishWork.child
     while (child !== null) {
       commitPassiveUnmountOnFiber(child)

@@ -89,29 +89,3 @@ export function getRootForUpdatedFiber(fiber) {
   }
   return fiber.stateNode
 }
-
-function arePropsEqual(nextProps, prevProps) {
-  if (Object.keys(nextProps).length !== Object.keys(prevProps).length) {
-    return false
-  }
-  for (const key in nextProps) {
-    if (!Object.is(nextProps[key], prevProps[key])) {
-      return false
-    }
-  }
-  return true
-}
-
-export function memo(Component) {
-  let cacheProps = null
-  let cacheChildElement = null
-
-  return (nextProps) => {
-    if (cacheProps !== null && arePropsEqual(nextProps, cacheProps)) {
-      return cacheChildElement
-    }
-    cacheProps = nextProps
-    cacheChildElement = Component(nextProps)
-    return cacheChildElement
-  }
-}

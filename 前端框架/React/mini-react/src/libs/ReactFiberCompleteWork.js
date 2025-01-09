@@ -3,6 +3,7 @@ import {
   HostComponent,
   HostRoot,
   HostText,
+  MemoComponent,
 } from './ReactWorkTags'
 import { setInitialProperties } from './ReactDOMComponent'
 import { NoFlags, Update } from './ReactFiberFlags'
@@ -36,6 +37,7 @@ function completeWork(workInProgress) {
     // HostRoot和FunctionComponent类型的FiberNode节点没有对应的DOM节点，没有构建DOM树逻辑，只需要收集子树FiberNode节点副作用即可
     case HostRoot:
     case FunctionComponent:
+    case MemoComponent:
       bubbleProperties(workInProgress)
       return null
     case HostComponent: {
