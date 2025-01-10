@@ -69,12 +69,13 @@ function updateHostRoot(current, workInProgress) {
   return reconcileChildren(current, workInProgress, nextChildren)
 }
 
-function updateFunctionComponent(current, workInProgress, Component) {
+function updateFunctionComponent(current, workInProgress, Component, renderLanes) {
   // 调用组件方法获取child ReactElement对象
   const nextChildren = renderWithHooks(
     workInProgress,
     Component,
     workInProgress.pendingProps,
+    renderLanes,
   )
   // 创建child ReactElement对应的FiberNode节点
   return reconcileChildren(current, workInProgress, nextChildren)
@@ -91,7 +92,7 @@ function updateHostComponent(current, workInProgress) {
   return reconcileChildren(current, workInProgress, nextChildren)
 }
 
-function updateMemoComponent(current, workInProgress) {
+function updateMemoComponent(current, workInProgress, renderLanes) {
   if (current !== null) {
     // 获取比对props方法
     const compare = workInProgress.elementType.compare || shallowEqual
@@ -107,7 +108,7 @@ function updateMemoComponent(current, workInProgress) {
   // 获取组件方法
   const Component = workInProgress.elementType.type
   // 调用组件方法获取新的child ReactElement
-  return updateFunctionComponent(current, workInProgress, Component)
+  return updateFunctionComponent(current, workInProgress, Component, renderLanes)
 }
 
 /**
@@ -130,7 +131,7 @@ function beginWork(workInProgress, renderLanes) {
     case FunctionComponent: {
       // 获取组件方法
       const Component = workInProgress.elementType
-      return updateFunctionComponent(current, workInProgress, Component)
+      return updateFunctionComponent(current, workInProgress, Component, renderLanes)
     }
     case HostComponent:
       return updateHostComponent(current, workInProgress)
@@ -138,7 +139,7 @@ function beginWork(workInProgress, renderLanes) {
       return null
     }
     case MemoComponent:
-      return updateMemoComponent(current, workInProgress)
+      return updateMemoComponent(current, workInProgress, renderLanes)
   }
 }
 

@@ -97,6 +97,7 @@ JS 任务分为同步任务和异步任务，同步任务都在主线程上执�
 
 - 主代码块
 - setTimeout、setInterval 等
+- MessageChannel
 
 ### 微任务
 

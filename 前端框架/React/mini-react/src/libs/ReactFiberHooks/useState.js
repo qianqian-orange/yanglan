@@ -5,7 +5,7 @@ import {
   mountWorkInProgressHook,
   updateWorkInProgressHook,
 } from '.'
-import { ensureRootIsScheduled } from '../ReactFiberRootScheduler'
+import { scheduleUpdateOnFiber } from '../ReactFiberWorkLoop'
 
 function basicStateReducer(state, action) {
   return typeof action === 'function' ? action(state) : action
@@ -31,11 +31,10 @@ function dispatchSetState(fiber, hook, action) {
   const root = getRootForUpdatedFiber(fiber)
   // 收集更新state的方法，在创建新FiberNode节点时执行
   hook.queue.push((state) => reducer(state, action))
-  root.pendingLanes = SyncLane
   fiber.lanes = SyncLane
   if (fiber.alternate !== null) fiber.alternate.lanes = SyncLane
   // 触发更新
-  ensureRootIsScheduled(root)
+  scheduleUpdateOnFiber(root, SyncLane)
 }
 
 function mountReducer(reducer, initialState) {

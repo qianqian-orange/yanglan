@@ -1,6 +1,6 @@
 import { DefaultLane } from './ReactFiberLane'
 import FiberRootNode from './ReactFiberRoot'
-import { ensureRootIsScheduled } from './ReactFiberRootScheduler'
+import { scheduleUpdateOnFiber } from './ReactFiberWorkLoop'
 
 /**
  * @param {*} root FiberRootNode对象
@@ -14,11 +14,10 @@ function ReactDOMRoot(root) {
  */
 ReactDOMRoot.prototype.render = function (children) {
   const root = this._internalRoot
-  root.pendingLanes = DefaultLane
   const { current } = root
   current.lanes = DefaultLane
   current.pendingProps = { children }
-  ensureRootIsScheduled(root)
+  scheduleUpdateOnFiber(root, DefaultLane)
 }
 
 /**
