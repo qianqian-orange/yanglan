@@ -1,14 +1,13 @@
 import { NoLanes } from '../ReactFiberLane'
-import { HostRoot } from '../ReactWorkTags'
 
+// 渲染优先级
+export let renderLanes = NoLanes
 // 记录当前FiberNode节点
 export let currentlyRenderingFiber = null
 // 记录旧Hook对象
 export let currentHook = null
 // 记录新Hook对象
 export let workInProgressHook = null
-// 渲染优先级
-export let renderLanes = NoLanes
 
 /**
  * @param {*} workInProgress 新FiberNode节点
@@ -30,6 +29,7 @@ export function renderWithHooks(
   workInProgress.updateQueue = null
   // 调用组件方法获取child ReactElement
   const children = Component(props)
+  renderLanes = NoLanes
   currentlyRenderingFiber = null
   currentHook = null
   workInProgressHook = null
@@ -89,12 +89,4 @@ export function updateWorkInProgressHook() {
     workInProgressHook = workInProgressHook.next = hook
   }
   return hook
-}
-
-// 获取FiberRootNode对象
-export function getRootForUpdatedFiber(fiber) {
-  while (fiber.tag !== HostRoot) {
-    fiber = fiber.return
-  }
-  return fiber.stateNode
 }

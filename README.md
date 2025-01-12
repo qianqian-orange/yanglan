@@ -58,6 +58,7 @@
   - 动态加载
   - 代码分割
   - tree shaking
+  - 联邦模块
 - typescript
 - eslint
 - stylelint

@@ -20,8 +20,8 @@ export default [
       },
     },
     rules: {
-      'semi': ['error', 'never'],
-      'quotes': ['error', 'single'],
+      semi: ['error', 'never'],
+      quotes: ['error', 'single'],
       'jsx-quotes': ['error', 'prefer-single'],
       'comma-dangle': ['error', 'always-multiline'],
     },

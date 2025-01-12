@@ -1,11 +1,11 @@
 import { NoLanes, SyncLane } from '../ReactFiberLane'
 import {
   currentlyRenderingFiber,
-  getRootForUpdatedFiber,
   mountWorkInProgressHook,
   updateWorkInProgressHook,
 } from './ReactFiberHooks'
 import { scheduleUpdateOnFiber } from '../ReactFiberWorkLoop'
+import { enqueueConcurrentRenderForLane } from '../ReactFiberConcurrentUpdates'
 
 function basicStateReducer(state, action) {
   return typeof action === 'function' ? action(state) : action
@@ -27,12 +27,9 @@ function dispatchSetState(fiber, hook, action) {
     // 如果state值相同则当前这次dispatch不需要触发更新
     if (Object.is(currentState, newState)) return
   }
-  // 获取FiberRootNode对象
-  const root = getRootForUpdatedFiber(fiber)
   // 收集更新state的方法，在创建新FiberNode节点时执行
   hook.queue.push((state) => reducer(state, action))
-  fiber.lanes |= SyncLane
-  if (fiber.alternate !== null) fiber.alternate.lanes |= SyncLane
+  const root = enqueueConcurrentRenderForLane(fiber, SyncLane)
   // 触发更新渲染
   scheduleUpdateOnFiber(root, SyncLane)
 }

@@ -1,6 +1,6 @@
 const path = require('path')
 import webpack from 'webpack'
-import { Configuration } from 'webpack-dev-server/types/lib/Server'
+import { Configuration } from 'webpack-dev-server'
 const { merge } = require('webpack-merge')
 const baseConfig = require('./webpack.base')
 

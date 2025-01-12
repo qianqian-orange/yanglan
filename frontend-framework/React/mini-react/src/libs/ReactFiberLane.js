@@ -170,7 +170,7 @@ function markSpawnedDeferredLane(root, spawnedLane) {
 /**
  * @param {*} root FiberRootNode对象
  * @param {*} remainingLanes 在下次更新渲染优先级
- * @param {*} spawnedLane DeferredLane
+ * @param {*} spawnedLane workInProgressDeferredLane
  */
 export function markRootFinished(root, remainingLanes, spawnedLane) {
   const previouslyPendingLanes = root.pendingLanes

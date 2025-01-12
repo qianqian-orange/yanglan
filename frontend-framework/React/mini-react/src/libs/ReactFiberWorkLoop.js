@@ -38,6 +38,7 @@ let entangledRenderLanes = NoLanes
 let workInProgressRootExitStatus = RootInProgress
 // FiberRootNode对象渲染优先级
 let workInProgressRootRenderLanes = NoLanes
+// 延迟渲染优先级
 let workInProgressDeferredLane = NoLanes
 
 export function getExecutionContext() {

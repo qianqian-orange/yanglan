@@ -105,6 +105,10 @@
 
 `useImperativeHandle`方法接收三个参数，第一个参数是`ref`对象，第二个参数是`create`方法，会调用`create`方法将返回值赋值给`ref.current`属性，第三个参数是依赖`deps`，当依赖`deps`发生变化时会重新调用`create`获取新的返回值赋值给`ref.current`
 
+### 1.10 useSyncExternalStore
+
+`useSyncExternalStore`方法接收三个参数，第一个参数是监听事件函数，第二个参数是获取数据方法，第三个参数是服务端渲染时调用的方法
+
 ## 二. 原理
 
 #### 2.1 [手写 mini React，理解 React 渲染原理](https://juejin.cn/post/7455612245768241192)
@@ -130,3 +134,5 @@
 #### 2.11 [手写 React useDeferredValue，理解 useDeferredValue 原理](https://juejin.cn/post/7458570571607212043)
 
 #### 2.12 [手写 React ImperativeHandle, 理解 useImperativeHandle 原理](https://juejin.cn/post/7458648750765883411)
+
+#### 2.13 [手写 React useSyncExternalStore，理解 useSyncExternalStore 原理](https://juejin.cn/post/7458837722826506276)
