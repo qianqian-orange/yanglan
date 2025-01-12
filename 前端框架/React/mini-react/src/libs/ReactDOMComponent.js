@@ -17,12 +17,12 @@ function setProp(node, key, value, prevValue) {
       }
       break
     }
-    case 'onClick': {
-      node.onClick = value
-      break
-    }
     case 'style': {
       setValueForStyles(node, value, prevValue)
+      break
+    }
+    case 'onClick': {
+      node.onClick = value
       break
     }
   }

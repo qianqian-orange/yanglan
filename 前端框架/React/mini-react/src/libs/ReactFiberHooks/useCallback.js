@@ -3,7 +3,7 @@ import {
   mountWorkInProgressHook,
   updateWorkInProgressHook,
   areHookInputsEqual,
-} from '.'
+} from './ReactFiberHooks'
 
 function mountCallback(callback, deps) {
   // 创建Hook对象，构建Hook单链表

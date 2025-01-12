@@ -2,7 +2,7 @@ import {
   currentlyRenderingFiber,
   mountWorkInProgressHook,
   updateWorkInProgressHook,
-} from '.'
+} from './ReactFiberHooks'
 
 function Ref(initialValue) {
   this.current = initialValue

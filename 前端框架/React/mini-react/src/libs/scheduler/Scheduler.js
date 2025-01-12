@@ -14,7 +14,7 @@ let startTime = -1
 const normalPriorityTimeout = 5000 // 5s
 const frameYieldMs = 5 // 5纳秒
 
-// 如果时间间隔小于5纳秒，说明JS引擎处于空闲状态
+// 终止当前任务，作为下一次宏任务执行
 export function shouldYieldToHost() {
   return performance.now() - startTime > frameYieldMs
 }

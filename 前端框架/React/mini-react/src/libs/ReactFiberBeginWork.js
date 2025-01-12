@@ -8,7 +8,7 @@ import {
 } from './ReactWorkTags'
 import { NoLanes } from './ReactFiberLane'
 import { Ref } from './ReactFiberFlags'
-import { renderWithHooks } from './ReactFiberHooks'
+import { renderWithHooks } from './ReactFiberHooks/ReactFiberHooks'
 import { shallowEqual } from './shared/shallowEqual'
 import { mountChildFibers, reconcileChildFibers } from './ReactChildFiber'
 
@@ -26,13 +26,15 @@ function markRef(current, workInProgress) {
 
 function cloneChildFibers(current, workInProgress) {
   if (current.child === null) return null
-  let newChild = createWorkInProgress(current.child, current.pendingProps)
+  let currentChild = current.child
+  let newChild = createWorkInProgress(currentChild, currentChild.pendingProps)
   newChild.return = workInProgress
   workInProgress.child = newChild
-  while (newChild.sibling !== null) {
+  while (currentChild.sibling !== null) {
+    currentChild = currentChild.sibling
     newChild = newChild.sibling = createWorkInProgress(
-      newChild.sibling,
-      newChild.pendingProps,
+      currentChild,
+      currentChild.pendingProps,
     )
     newChild.return = workInProgress
   }
@@ -69,7 +71,12 @@ function updateHostRoot(current, workInProgress) {
   return reconcileChildren(current, workInProgress, nextChildren)
 }
 
-function updateFunctionComponent(current, workInProgress, Component, renderLanes) {
+function updateFunctionComponent(
+  current,
+  workInProgress,
+  Component,
+  renderLanes,
+) {
   // 调用组件方法获取child ReactElement对象
   const nextChildren = renderWithHooks(
     workInProgress,
@@ -108,7 +115,12 @@ function updateMemoComponent(current, workInProgress, renderLanes) {
   // 获取组件方法
   const Component = workInProgress.elementType.type
   // 调用组件方法获取新的child ReactElement
-  return updateFunctionComponent(current, workInProgress, Component, renderLanes)
+  return updateFunctionComponent(
+    current,
+    workInProgress,
+    Component,
+    renderLanes,
+  )
 }
 
 /**
@@ -131,7 +143,12 @@ function beginWork(workInProgress, renderLanes) {
     case FunctionComponent: {
       // 获取组件方法
       const Component = workInProgress.elementType
-      return updateFunctionComponent(current, workInProgress, Component, renderLanes)
+      return updateFunctionComponent(
+        current,
+        workInProgress,
+        Component,
+        renderLanes,
+      )
     }
     case HostComponent:
       return updateHostComponent(current, workInProgress)

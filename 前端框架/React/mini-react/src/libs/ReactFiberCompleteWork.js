@@ -7,6 +7,7 @@ import {
 } from './ReactWorkTags'
 import { setInitialProperties } from './ReactDOMComponent'
 import { NoFlags, Update } from './ReactFiberFlags'
+import { NoLanes } from './ReactFiberLane'
 
 export function appendAllChildren(el, workInProgress) {
   let nextChild = workInProgress.child
@@ -20,14 +21,19 @@ export function appendAllChildren(el, workInProgress) {
   }
 }
 
+// 收集子树节点副作用
 function bubbleProperties(workInProgress) {
   let subtreeFlags = NoFlags
   let child = workInProgress.child
+  let newChildLanes = NoLanes
   while (child !== null) {
+    newChildLanes |= child.lanes
+    newChildLanes |= child.childLanes
     subtreeFlags |= child.flags
     subtreeFlags |= child.subtreeFlags
     child = child.sibling
   }
+  workInProgress.childLanes = newChildLanes
   workInProgress.subtreeFlags |= subtreeFlags
 }
 

@@ -263,14 +263,14 @@ function commitPassiveMountOnFiber(finishWork) {
     }
   }
 }
-/*****************************  useEffect create end  *****************************/
 
 export function flushPassiveEffects(root) {
   commitPassiveUnmountOnFiber(root.current)
   commitPassiveMountOnFiber(root.current)
 }
+/*****************************  useEffect create end  *****************************/
 
-/*****************************  useRef start  *****************************/
+/*****************************  useLayoutEffect / useRef start  *****************************/
 function safelyDetachRef(finishWork) {
   if (finishWork !== null && finishWork.ref !== null)
     finishWork.ref.current = null
@@ -312,4 +312,4 @@ export function commitLayoutEffectOnFiber(finishWork) {
     }
   }
 }
-/*****************************  useRef end  *****************************/
+/***************************** useLayoutEffect / useRef end  *****************************/

@@ -3,7 +3,7 @@ import {
   currentlyRenderingFiber,
   mountWorkInProgressHook,
   updateWorkInProgressHook,
-} from '.'
+} from './ReactFiberHooks'
 import { HookHasEffect, HookLayout, HookPassive } from '../ReactHookEffectFlags'
 import {
   Passive as PassiveEffect,
@@ -40,7 +40,7 @@ function pushEffect(tag, create, deps, destroy = null) {
  * @param {*} create 入参执行函数
  * @param {*} deps 入参依赖
  */
-function mountEffectImpl(fiberFlags, hookFlags, create, deps) {
+export function mountEffectImpl(fiberFlags, hookFlags, create, deps) {
   // 创建Hook对象，构建Hook链表
   const hook = mountWorkInProgressHook()
   // 修改新节点的flags属性值
@@ -55,7 +55,7 @@ function mountEffectImpl(fiberFlags, hookFlags, create, deps) {
  * @param {*} create 入参执行函数
  * @param {*} deps 入参依赖
  */
-function updateEffectImpl(fiberFlags, hookFlags, create, deps) {
+export function updateEffectImpl(fiberFlags, hookFlags, create, deps) {
   // 创建Hook对象，复制旧Hook对象属性值，构建Hook链表
   const hook = updateWorkInProgressHook()
   // 获取旧Effect对象

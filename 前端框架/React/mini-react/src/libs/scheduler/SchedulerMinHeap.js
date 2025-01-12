@@ -64,6 +64,7 @@ export const pop = (heap) => {
   const first = heap[0]
   const last = heap.pop()
   if (first !== last) {
+    heap[0] = last
     // 向下调整最小堆
     siftDown(heap, last, 0)
   }
