@@ -13,7 +13,7 @@ import {
   Ref,
   Update,
 } from './ReactFiberFlags'
-import { HookLayout, HookPassive } from './ReactHookEffectFlags'
+import { HookHasEffect, HookLayout, HookPassive } from './ReactHookEffectFlags'
 import { appendAllChildren } from './ReactFiberCompleteWork'
 import { updateProperties } from './ReactDOMComponent'
 
@@ -129,9 +129,9 @@ export function commitMutationEffectsOnFiber(finishWork) {
     case FunctionComponent: {
       recursivelyTraverseMutationEffects(finishWork)
       commitReconciliationEffects(finishWork)
-      if (finishWork.tag & Update) {
+      if (finishWork.flags & Update) {
         // 调用useLayoutEffect destroy方法
-        commitHookEffectListUnmount(finishWork, HookLayout)
+        commitHookEffectListUnmount(finishWork, HookLayout | HookHasEffect)
       }
       break
     }
@@ -166,7 +166,7 @@ function commitHookEffectListUnmount(finishWork, hookFlags) {
   const queue = finishWork.updateQueue
   if (queue !== null) {
     queue.forEach((effect) => {
-      if (effect.tag & hookFlags && effect.destroy) {
+      if ((effect.tag & hookFlags) === hookFlags && effect.destroy) {
         const destroy = effect.destroy
         effect.destroy = null
         destroy()
@@ -214,7 +214,7 @@ function commitPassiveUnmountOnFiber(finishWork) {
     case FunctionComponent: {
       recursivelyTraversePassiveUnmountEffects(finishWork)
       if (finishWork.flags & Passive) {
-        commitHookEffectListUnmount(finishWork, HookPassive)
+        commitHookEffectListUnmount(finishWork, HookPassive | HookHasEffect)
       }
       break
     }
@@ -231,7 +231,7 @@ function commitPassiveUnmountOnFiber(finishWork) {
 function commitHookEffectListMount(finishWork, hookFlags) {
   const queue = finishWork.updateQueue
   queue.forEach((effect) => {
-    if (effect.tag & hookFlags) {
+    if ((effect.tag & hookFlags) === hookFlags) {
       effect.destroy = effect.create()
     }
   })
@@ -253,7 +253,7 @@ function commitPassiveMountOnFiber(finishWork) {
       recursivelyTraversePassiveMountEffects(finishWork)
       if (finishWork.flags & Passive) {
         // 调用useEffect的create方法
-        commitHookEffectListMount(finishWork, HookPassive)
+        commitHookEffectListMount(finishWork, HookPassive | HookHasEffect)
       }
       break
     }
@@ -297,7 +297,7 @@ export function commitLayoutEffectOnFiber(finishWork) {
       recursivelyTraverseLayoutEffects(finishWork)
       if (finishWork.flags & Update) {
         // 调用useLayoutEffect的create方法
-        commitHookEffectListMount(finishWork, HookLayout)
+        commitHookEffectListMount(finishWork, HookLayout | HookHasEffect)
       }
       break
     }

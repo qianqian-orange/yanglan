@@ -101,6 +101,10 @@
 
 `useDeferredValue`方法接收两个参数，第一个入参是延迟更新`value`，第二个入参是初始值，如果有传初始化，则`useDeferredValue`方法返回初始值，没有传初始值则返回延迟更新`value`
 
+### 1.9 useImperativeHandle
+
+`useImperativeHandle`方法接收三个参数，第一个参数是`ref`对象，第二个参数是`create`方法，会调用`create`方法将返回值赋值给`ref.current`属性，第三个参数是依赖`deps`，当依赖`deps`发生变化时会重新调用`create`获取新的返回值赋值给`ref.current`
+
 ## 二. 原理
 
 #### 2.1 [手写 mini React，理解 React 渲染原理](https://juejin.cn/post/7455612245768241192)
@@ -124,3 +128,5 @@
 #### 2.10 [手写 React Scheduler，理解 Scheduler 原理](https://juejin.cn/post/7458189303062151222)
 
 #### 2.11 [手写 React useDeferredValue，理解 useDeferredValue 原理](https://juejin.cn/post/7458570571607212043)
+
+#### 2.12 [手写 React ImperativeHandle, 理解 useImperativeHandle 原理](https://juejin.cn/post/7458648750765883411)

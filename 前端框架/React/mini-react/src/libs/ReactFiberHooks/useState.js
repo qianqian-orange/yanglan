@@ -33,7 +33,7 @@ function dispatchSetState(fiber, hook, action) {
   hook.queue.push((state) => reducer(state, action))
   fiber.lanes |= SyncLane
   if (fiber.alternate !== null) fiber.alternate.lanes |= SyncLane
-  // 触发更新
+  // 触发更新渲染
   scheduleUpdateOnFiber(root, SyncLane)
 }
 
