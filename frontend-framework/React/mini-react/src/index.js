@@ -9,11 +9,10 @@ function HelloWorld() {
 }
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [count] = useState(0)
 
   return (
     <div>
-      <h1 onClick={() => setCount(count + 1)}>click</h1>
       <CounterContext.Provider value={count}>
         <HelloWorld />
       </CounterContext.Provider>
