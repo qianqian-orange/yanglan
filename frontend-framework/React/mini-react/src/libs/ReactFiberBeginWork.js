@@ -1,5 +1,6 @@
 import { createWorkInProgress } from './ReactFiber'
 import {
+  ContextProvider,
   FunctionComponent,
   HostComponent,
   HostRoot,
@@ -11,6 +12,7 @@ import { Ref } from './ReactFiberFlags'
 import { renderWithHooks } from './ReactFiberHooks/ReactFiberHooks'
 import { shallowEqual } from './shared/shallowEqual'
 import { mountChildFibers, reconcileChildFibers } from './ReactChildFiber'
+import { pushProvider } from './react-reconciler/ReactFiberNewContext'
 
 function markRef(current, workInProgress) {
   if (workInProgress.ref === null) {
@@ -123,6 +125,16 @@ function updateMemoComponent(current, workInProgress, renderLanes) {
   )
 }
 
+function updateContextProvider(current, workInProgress) {
+  const context = workInProgress.elementType
+  const newProps = workInProgress.pendingProps
+  const newValue = newProps.value
+  pushProvider(context, newValue)
+  const newChildren = newProps.children
+  reconcileChildren(current, workInProgress, newChildren)
+  return workInProgress.child
+}
+
 /**
  * @param {*} workInProgress FiberNode节点
  */
@@ -152,11 +164,12 @@ function beginWork(workInProgress, renderLanes) {
     }
     case HostComponent:
       return updateHostComponent(current, workInProgress)
-    case HostText: {
+    case HostText:
       return null
-    }
     case MemoComponent:
       return updateMemoComponent(current, workInProgress, renderLanes)
+    case ContextProvider:
+      return updateContextProvider(current, workInProgress, renderLanes)
   }
 }
 

@@ -22,6 +22,10 @@ css 动画库
 
 移动端 faskclick
 
+### 1.6 [chart.js](https://www.chartjs.org/docs/latest/)
+
+图表库
+
 ## 2. Vue
 
 ### 2.1 [better-scroll](https://www.npmjs.com/package/better-scroll)
@@ -45,6 +49,18 @@ css 动画库
 ### 3.4 [zustand](https://zustand.docs.pmnd.rs/getting-started/introduction)
 
 状态管理库
+
+### 3.5 [react-error-boundary](https://www.npmjs.com/package/react-error-boundary)
+
+ErrorBoundary
+
+### 3.6 [react-spring](https://www.npmjs.com/package/react-spring)
+
+React 动画库
+
+### 3.7 [ant design](https://ant-design.antgroup.com/index-cn)
+
+React 组件库
 
 ## 4. Nodejs
 

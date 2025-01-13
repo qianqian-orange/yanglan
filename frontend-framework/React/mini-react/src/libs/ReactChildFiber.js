@@ -1,12 +1,13 @@
 import FiberNode, { createWorkInProgress } from './ReactFiber'
 import { ChildDeletion, Placement } from './ReactFiberFlags'
 import {
+  ContextProvider,
   FunctionComponent,
   HostComponent,
   HostText,
   MemoComponent,
 } from './ReactWorkTags'
-import { REACT_MEMO_TYPE } from './ReactSymbol'
+import { REACT_CONTEXT_TYPE, REACT_MEMO_TYPE } from './shared/ReactSymbol'
 
 function coerceRef(fiber, element) {
   const ref = element.props.ref
@@ -58,10 +59,13 @@ function createChildReconciler(shouldTrackSideEffects) {
     } else if (typeof type === 'string') {
       fiberTag = HostComponent
     } else {
-      // memo类型FiberNode节点 
+      // memo类型FiberNode节点
       switch (type.$$typeof) {
         case REACT_MEMO_TYPE:
           fiberTag = MemoComponent
+          break
+        case REACT_CONTEXT_TYPE:
+          fiberTag = ContextProvider
           break
       }
     }

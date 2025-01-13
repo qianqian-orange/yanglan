@@ -1,4 +1,5 @@
 import {
+  ContextProvider,
   FunctionComponent,
   HostComponent,
   HostRoot,
@@ -8,6 +9,7 @@ import {
 import { setInitialProperties } from './ReactDOMComponent'
 import { NoFlags, Update } from './ReactFiberFlags'
 import { NoLanes } from './ReactFiberLane'
+import { popProvider } from './react-reconciler/ReactFiberNewContext'
 
 export function appendAllChildren(el, workInProgress) {
   let nextChild = workInProgress.child
@@ -81,6 +83,10 @@ function completeWork(workInProgress) {
       bubbleProperties(workInProgress)
       return null
     }
+    case ContextProvider:
+      popProvider(workInProgress.elementType)
+      bubbleProperties(workInProgress)
+      return
   }
 }
 

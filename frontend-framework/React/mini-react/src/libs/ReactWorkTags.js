@@ -9,3 +9,5 @@ export const HostText = 6
 // memo组件
 export const MemoComponent = 14
 export const SimpleMemoComponent = 15
+// Provider组件
+export const ContextProvider = 10

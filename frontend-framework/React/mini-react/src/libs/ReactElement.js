@@ -1,4 +1,4 @@
-import { REACT_ELEMENT_TYPE } from './ReactSymbol'
+import { REACT_ELEMENT_TYPE } from './shared/ReactSymbol'
 
 /**
  * @param {*} type 组件方法或元素标签类型，例如function App() {}或h1
