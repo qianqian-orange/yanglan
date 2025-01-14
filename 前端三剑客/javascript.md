@@ -78,15 +78,15 @@
 
 ```js
 function curry(fn, args) {
-  args = args || [];
+  args = args || []
   return function () {
-    let _args = args.concat([].slice.call(arguments));
+    let _args = args.concat([].slice.call(arguments))
     if (_args.length < fn.length) {
-      return curry.call(this, fn, _args);
+      return curry.call(this, fn, _args)
     } else {
-      return fn.apply(this, _args);
+      return fn.apply(this, _args)
     }
-  };
+  }
 }
 ```
 
@@ -96,12 +96,12 @@ function curry(fn, args) {
 
 ```js
 function myInstanceof(left, right) {
-  if (left === null || typeof left !== "object") return false;
-  let proto = left.__proto__;
+  if (left === null || typeof left !== 'object') return false
+  let proto = left.__proto__
   while (true) {
-    if (proto === null) return false;
-    if (proto === right.prototype) return true;
-    proto = proto.__proto__;
+    if (proto === null) return false
+    if (proto === right.prototype) return true
+    proto = proto.__proto__
   }
 }
 ```
@@ -110,10 +110,10 @@ function myInstanceof(left, right) {
 
 ```js
 function objectFactory(constructor, ...args) {
-  let obj = new Object();
-  obj.__proto__ = constructor.prototype;
-  let res = constructor.apply(obj, args);
-  return typeof res === "object" && res !== null ? res : obj;
+  let obj = new Object()
+  obj.__proto__ = constructor.prototype
+  let res = constructor.apply(obj, args)
+  return typeof res === 'object' && res !== null ? res : obj
 }
 ```
 
@@ -121,50 +121,50 @@ function objectFactory(constructor, ...args) {
 
 ```js
 Function.prototype.call = function (context, ...args) {
-  if (typeof this !== "function") {
-    return TypeError(this + "is no a function");
+  if (typeof this !== 'function') {
+    return TypeError(this + 'is no a function')
   }
-  context = context || globalThis;
-  context.fn = this;
-  let result = context.fn(...args);
-  delete context.fn;
-  return result;
-};
+  context = context || globalThis
+  context.fn = this
+  let result = context.fn(...args)
+  delete context.fn
+  return result
+}
 ```
 
 ### 8.7 apply
 
 ```js
 Function.prototype.apply = function (context, args) {
-  if (typeof context !== "function") {
-    return TypeError(this + "is no a function");
+  if (typeof context !== 'function') {
+    return TypeError(this + 'is no a function')
   }
-  context = context || globalThis;
-  context.fn = this;
-  let result = context.fn(...args);
-  delete context.fn;
-  return result;
-};
+  context = context || globalThis
+  context.fn = this
+  let result = context.fn(...args)
+  delete context.fn
+  return result
+}
 ```
 
 ### 8.8 bind
 
 ```js
 Function.prototype.bind = function (context, ...args) {
-  if (typeof this !== "function") {
-    throw TypeError(this + `is no a function`);
+  if (typeof this !== 'function') {
+    throw TypeError(this + `is no a function`)
   }
-  let self = this;
-  context = context || globalThis;
+  let self = this
+  context = context || globalThis
   let F = function () {
     return self.apply(
       this instanceof F ? this : context,
       args.concat([].slice.call(arguments))
-    );
-  };
-  F.prototype = Object.create(self.prototype);
-  return F;
-};
+    )
+  }
+  F.prototype = Object.create(self.prototype)
+  return F
+}
 ```
 
 ### 8.9 Object.create
@@ -172,8 +172,8 @@ Function.prototype.bind = function (context, ...args) {
 ```js
 function create(o) {
   function F() {}
-  F.prototype = o;
-  return new F();
+  F.prototype = o
+  return new F()
 }
 ```
 
@@ -188,10 +188,10 @@ function is(x, y) {
     // 1 / +0 = +Infinity
     // 1 / -0 = -Infinity
     // +Infinity !== -Infinity
-    return x !== 0 || y !== 0 || 1 / x === 1 / y;
+    return x !== 0 || y !== 0 || 1 / x === 1 / y
   } else {
     // 当x为NaN, y为NaN时应该返回true
-    return x !== x && y !== y;
+    return x !== x && y !== y
   }
 }
 ```
@@ -202,31 +202,31 @@ function is(x, y) {
 
 ```js
 function throttle(fn, delay) {
-  let timer, now, context, args;
-  let previous = 0;
+  let timer, now, context, args
+  let previous = 0
 
   function throttled() {
-    context = this;
-    args = arguments;
-    now = Date.now();
-    let residue = delay - (now - previous);
+    context = this
+    args = arguments
+    now = Date.now()
+    let residue = delay - (now - previous)
     if (residue <= 0 || residue > delay) {
       if (timer) {
-        clearTimeout(timer);
-        timer = null;
+        clearTimeout(timer)
+        timer = null
       }
-      fn.apply(context, args);
-      previous = now;
+      fn.apply(context, args)
+      previous = now
     } else if (!timer) {
       timer = setTimeout(() => {
-        fn.apply(context, args);
-        timer = null;
-        previous = Date.now();
-      }, residue);
+        fn.apply(context, args)
+        timer = null
+        previous = Date.now()
+      }, residue)
     }
   }
 
-  return throttled;
+  return throttled
 }
 ```
 
@@ -236,22 +236,22 @@ function throttle(fn, delay) {
 
 ```js
 function debounce(fn, delay) {
-  let timer, context, args;
+  let timer, context, args
 
   function debounced() {
-    context = this;
-    args = arguments;
+    context = this
+    args = arguments
     if (timer) {
-      clearTimeout(timer);
-      timer = null;
+      clearTimeout(timer)
+      timer = null
     }
     timer = setTimeout(() => {
-      fn.apply(context, args);
-      timer = null;
-    }, delay);
+      fn.apply(context, args)
+      timer = null
+    }, delay)
   }
 
-  return debounced;
+  return debounced
 }
 ```
 
@@ -260,11 +260,11 @@ function debounce(fn, delay) {
 ```javascript
 function Parent() {}
 function Children() {
-  Parent.call(this);
+  Parent.call(this)
 }
-Children.prototype = Object.create(Parent.prototype);
-Children.prototype.constructor = Children;
-Children.__proto__ = Parent;
+Children.prototype = Object.create(Parent.prototype)
+Children.prototype.constructor = Children
+Children.__proto__ = Parent
 ```
 
 ### 8.14 Promise
@@ -272,105 +272,105 @@ Children.__proto__ = Parent;
 参考文档: https://juejin.cn/post/6844903796129136654
 
 ```js
-const PENDING = "pending";
-const FULFILLED = "fulfilled";
-const REJECTED = "rejected";
+const PENDING = 'pending'
+const FULFILLED = 'fulfilled'
+const REJECTED = 'rejected'
 
 function Promise(executor) {
-  this.status = PENDING;
-  this.value = null;
-  this.reason = null;
-  this.onfulfilled = [];
-  this.onrejected = [];
+  this.status = PENDING
+  this.value = null
+  this.reason = null
+  this.onfulfilled = []
+  this.onrejected = []
 
-  this.resolve = (value) => {
-    if (this.status !== PENDING) return;
-    this.status = FULFILLED;
-    this.value = value;
-    this.onfulfilled.forEach((fn) => fn());
-  };
+  this.resolve = value => {
+    if (this.status !== PENDING) return
+    this.status = FULFILLED
+    this.value = value
+    this.onfulfilled.forEach(fn => fn())
+  }
 
-  this.reject = (reason) => {
-    if (this.status !== PENDING) return;
-    this.status = REJECTED;
-    this.reason = reason;
-    this.onrejected.forEach((fn) => fn());
-  };
+  this.reject = reason => {
+    if (this.status !== PENDING) return
+    this.status = REJECTED
+    this.reason = reason
+    this.onrejected.forEach(fn => fn())
+  }
 
   try {
-    executor(this.resolve, this.reject);
+    executor(this.resolve, this.reject)
   } catch (e) {
-    this.reject(e);
+    this.reject(e)
   }
 }
 
 function resolveResult(promise, result, resolve, reject) {
-  if (promise === result) throw Error("chaining circle");
+  if (promise === result) throw Error('chaining circle')
   if (result instanceof Object) {
-    const then = result.then;
-    if (typeof then === "function") {
+    const then = result.then
+    if (typeof then === 'function') {
       then.call(
         result,
-        (value) => {
-          resolve(value);
+        value => {
+          resolve(value)
         },
-        (reason) => {
-          reject(reason);
+        reason => {
+          reject(reason)
         }
-      );
+      )
     } else {
-      resolve(result);
+      resolve(result)
     }
   } else {
-    resolve(result);
+    resolve(result)
   }
 }
 
 Promise.prototype.then = function (
-  onFulfilled = (value) => value,
-  onRejected = (e) => {
-    throw e;
+  onFulfilled = value => value,
+  onRejected = e => {
+    throw e
   }
 ) {
-  const self = this;
+  const self = this
   let promise = new Promise((resolve, reject) => {
     switch (self.status) {
       case PENDING:
         self.onfulfilled.push(() => {
           try {
-            const result = onFulfilled(self.value);
-            resolveResult(promise, result, resolve, reject);
+            const result = onFulfilled(self.value)
+            resolveResult(promise, result, resolve, reject)
           } catch (e) {
-            reject(e);
+            reject(e)
           }
-        });
+        })
         self.onrejected.push(() => {
           try {
-            const result = onRejected(self.reason);
-            resolveResult(promise, result, resolve, reject);
+            const result = onRejected(self.reason)
+            resolveResult(promise, result, resolve, reject)
           } catch (e) {
-            reject(e);
+            reject(e)
           }
-        });
-        break;
+        })
+        break
       case FULFILLED:
         try {
-          const result = onFulfilled(self.value);
-          resolveResult(promise, result, resolve, reject);
+          const result = onFulfilled(self.value)
+          resolveResult(promise, result, resolve, reject)
         } catch (e) {
-          reject(e);
+          reject(e)
         }
-        break;
+        break
       case REJECTED:
         try {
-          const result = onRejected(self.reason);
-          resolveResult(promise, result, resolve, reject);
+          const result = onRejected(self.reason)
+          resolveResult(promise, result, resolve, reject)
         } catch (e) {
-          reject(e);
+          reject(e)
         }
-        break;
+        break
     }
-    return promise;
-  });
-};
+    return promise
+  })
+}
 ```
