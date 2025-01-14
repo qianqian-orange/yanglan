@@ -50,3 +50,32 @@
    ```bash
    node -v
    ```
+
+## 四. 安装mysql
+
+4.1 下载mysql dmg格式安装包，地址: https://dev.mysql.com/downloads/mysql/
+
+4.2 配置环境变量
+
+```bash
+# .zshrc
+PATH=$PATH:/usr/local/mysql/bin
+```
+
+4.3 创建/etc/my.cnf配置文件
+
+```bash
+[mysqld]
+mysql_native_password=ON
+```
+
+4.4 命令行连接数据库
+
+```bash
+ALTER USER 'root'@'localhost' IDENTIFIED WITH 'mysql_native_password' BY '12345678';
+``
+```
+
+## 五. 安装redis
+
+https://redis.io/docs/latest/operate/oss_and_stack/install/install-redis/install-redis-from-source/

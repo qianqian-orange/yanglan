@@ -67,3 +67,11 @@ React 组件库
 ### [ws](https://www.npmjs.com/package/ws)
 
 websocket 库
+
+### [mysql2](https://www.npmjs.com/package/mysql2)
+
+mysql库
+
+### [redis](https://www.npmjs.com/package/redis)
+
+redis库

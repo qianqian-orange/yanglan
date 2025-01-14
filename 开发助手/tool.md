@@ -62,6 +62,10 @@ js 代码片段生成
 
 react 代码片段生成
 
+### 1.7 Database Client
+
+数据库可视化
+
 ## 2. [http-server](https://www.npmjs.com/package/http-server)
 
 启动本地服务器
