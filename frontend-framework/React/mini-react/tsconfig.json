@@ -1,6 +1,8 @@
 {
   "compilerOptions": {
-    "outDir": "dist",
+    "rootDir": ".",
+    "strict": true,
+    "outDir": "./dist",
     "noImplicitAny": true,
     "module": "ESNext",
     "target": "ES5",
@@ -11,8 +13,9 @@
     "esModuleInterop": true,
     "sourceMap": true,
     "typeRoots": ["typings", "node_modules/@types"],
+    "baseUrl": ".",
     "paths": {
-      "@/*": ["src/*"]
+      "@/*": ["./src/*"]
     }
   },
   "exclude": ["node_modules"],
