@@ -26,6 +26,30 @@ css 动画库
 
 图表库
 
+### 1.7 [viewerjs](https://fengyuanchen.github.io/viewerjs/)
+
+JavaScript image viewer
+
+### 1.8 [jspdf](https://parall.ax/products/jspdf)
+
+js生成pdf
+
+### 1.9 [html2canvas](https://html2canvas.hertzen.com/)
+
+生成html快照
+
+### 1.10 [html2pdf.js](https://www.npmjs.com/package/html2pdf.js)
+
+html生成pdf
+
+### 1.11 [plyr](https://plyr.io/)
+
+媒体播放器
+
+### 1.12 [fabric.js](https://github.com/fabricjs/fabric.js)
+
+canvas库
+
 ## 2. Vue
 
 ### 2.1 [better-scroll](https://www.npmjs.com/package/better-scroll)

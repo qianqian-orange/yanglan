@@ -374,3 +374,20 @@ Promise.prototype.then = function (
   })
 }
 ```
+
+### 8.15 深拷贝
+
+```javascript
+function deepClone(obj, hash = new WeakMap()) {
+  if (obj === null) return null
+  if (obj instanceof Date) return new Date(obj)
+  if (obj instanceof RegExp) return RegExp(obj)
+  if (hash.get(obj)) return hash.get(obj)
+  const clone = new obj.constructor()
+  hash.set(obj, clone)
+  for (const key in obj) {
+    clone[key] = deepClone(obj[key], hash)
+  }
+  return clone
+}
+```

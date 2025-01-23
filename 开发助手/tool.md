@@ -54,17 +54,13 @@
    }
    ```
 
-### 1.5 JavaScript standardjs styled snippets
-
-js 代码片段生成
-
-### 1.6 React Standard Style code snippets
-
-react 代码片段生成
-
-### 1.7 Database Client
+### 1.5 Database Client
 
 数据库可视化
+
+### 1.6 GitLens — Git supercharged
+
+git插件
 
 ## 2. [http-server](https://www.npmjs.com/package/http-server)
 
