@@ -88,14 +88,20 @@ React 组件库
 
 ## 4. Nodejs
 
-### [ws](https://www.npmjs.com/package/ws)
+### 4.1 [ws](https://www.npmjs.com/package/ws)
 
 websocket 库
 
-### [mysql2](https://www.npmjs.com/package/mysql2)
+### 4.2 [mysql2](https://www.npmjs.com/package/mysql2)
 
 mysql库
 
-### [redis](https://www.npmjs.com/package/redis)
+### 4.3 [redis](https://www.npmjs.com/package/redis)
 
 redis库
+
+## 5. npm
+
+### 5.1 [npm-run-all](https://www.npmjs.com/package/npm-run-all)
+
+A CLI tool to run multiple npm-scripts in parallel or sequential

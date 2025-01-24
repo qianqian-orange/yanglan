@@ -46,5 +46,5 @@ HTTP 是获取例如 HTML 文档资源的协议，是 Web 上进行任何数据�
 ### window.location
 
 ```javascript
-window.location = "xxx";
+window.location = 'xxx'
 ```
