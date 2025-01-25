@@ -6,6 +6,12 @@
     format('woff2');
 }
 
+body {
+  padding: 0;
+  margin: 0;
+  background-color: #eee;
+}
+
 :global {
   .material-icons {
     font-family: 'Material Icons';
@@ -21,5 +27,22 @@
     direction: ltr;
     font-feature-settings: 'liga';
     -webkit-font-smoothing: antialiased;
+  }
+
+  .editable-container {
+    width: 720px;
+    margin: 120px auto;
+    background-color: #fff;
+  }
+
+  .editable-tool-bar {
+    display: flex;
+    padding: 18px;
+    border-bottom: 1px solid #eee;
+  }
+
+  .editable-content {
+    padding: 18px;
+    outline: none;
   }
 }
