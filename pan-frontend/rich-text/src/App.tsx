@@ -1,9 +1,7 @@
-import React, { useEffect, useMemo, useRef } from 'react'
+import React, { useMemo } from 'react'
 import { createEditor } from './libs/slate/create-editor'
-import { SlateContext } from './libs/slate-react/hooks/use-slate'
-import Icon from './components/Icon'
-import { useChildren } from './libs/slate-react/hooks/use-children'
 import { Descendant } from './libs/slate/interfaces/node'
+import Slate from './libs/slate-react/components/slate'
 
 const initialValue: Descendant[] = [
   {
@@ -42,37 +40,9 @@ const initialValue: Descendant[] = [
 ]
 
 function App() {
-  const ref = useRef<HTMLDivElement>(null)
   const editor = useMemo(() => createEditor(initialValue), [])
 
-  useEffect(() => {
-    window.document.addEventListener('selectionchange', () => {
-      console.log('selectionchange', document.getSelection())
-    })
-  }, [])
-
-  useEffect(() => {
-    ref.current?.focus()
-  }, [])
-
-  return (
-    <SlateContext.Provider value={{ editor }}>
-      <div className='editable-container'>
-        <div className='editable-toolbar'>
-          <Icon>format_bold</Icon>
-        </div>
-        <div
-          className='editable-content'
-          ref={ref}
-          contentEditable
-          suppressContentEditableWarning
-          data-slate-editor
-        >
-          {useChildren({ node: editor })}
-        </div>
-      </div>
-    </SlateContext.Provider>
-  )
+  return <Slate editor={editor} />
 }
 
 export default App

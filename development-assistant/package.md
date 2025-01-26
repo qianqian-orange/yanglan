@@ -2,51 +2,43 @@
 
 ## 1. 通用
 
-### 1.1 [normalize.css](https://www.npmjs.com/package/normalize.css)
-
-磨平浏览器样式差异
-
-### 1.2 [rxjs](https://rxjs.dev/)
+### 1.1 [rxjs](https://rxjs.dev/)
 
 函数式编程库
 
-### 1.3 [sortablejs](https://www.npmjs.com/package/sortablejs)
+### 1.2 [sortablejs](https://www.npmjs.com/package/sortablejs)
 
 js 拖拽库
 
-### 1.4 [animate.css](https://www.npmjs.com/package/animate.css)
-
-css 动画库
-
-### 1.5 [faskclick](https://www.npmjs.com/package/fastclick)
+### 1.3 [faskclick](https://www.npmjs.com/package/fastclick)
 
 移动端 faskclick
 
-### 1.6 [chart.js](https://www.chartjs.org/docs/latest/)
+### 1.4 [chart.js](https://www.chartjs.org/docs/latest/)
 
 图表库
 
-### 1.7 [viewerjs](https://fengyuanchen.github.io/viewerjs/)
+### 1.5 [viewerjs](https://fengyuanchen.github.io/viewerjs/)
 
 JavaScript image viewer
 
-### 1.8 [jspdf](https://parall.ax/products/jspdf)
+### 1.6 [jspdf](https://parall.ax/products/jspdf)
 
 js生成pdf
 
-### 1.9 [html2canvas](https://html2canvas.hertzen.com/)
+### 1.7 [html2canvas](https://html2canvas.hertzen.com/)
 
 生成html快照
 
-### 1.10 [html2pdf.js](https://www.npmjs.com/package/html2pdf.js)
+### 1.8 [html2pdf.js](https://www.npmjs.com/package/html2pdf.js)
 
 html生成pdf
 
-### 1.11 [plyr](https://plyr.io/)
+### 1.9 [plyr](https://plyr.io/)
 
 媒体播放器
 
-### 1.12 [fabric.js](https://github.com/fabricjs/fabric.js)
+### 1.10 [fabric.js](https://github.com/fabricjs/fabric.js)
 
 canvas库
 
@@ -111,3 +103,17 @@ A CLI tool to run multiple npm-scripts in parallel or sequential
 ### 6.1 [is-plain-object](https://www.npmjs.com/package/is-plain-object)
 
 判断是否是对象
+
+### 6.2 [is-hotkey](https://www.npmjs.com/package/is-hotkey)
+
+快捷键判断
+
+## 7. CSS
+
+### 7.1 [normalize.css](https://www.npmjs.com/package/normalize.css)
+
+磨平浏览器样式差异
+
+### 7.2 [animate.css](https://www.npmjs.com/package/animate.css)
+
+css 动画库

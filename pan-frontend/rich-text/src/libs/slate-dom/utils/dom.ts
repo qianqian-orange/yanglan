@@ -1,3 +1,10 @@
+export type DOMPoint = [Node, number]
+/**
+ * Check if a DOM node is an element node.
+ */
+export const isDOMElement = (node: Node) =>
+  node instanceof window.Node && node.nodeType === 1
+
 /**
  * @returns `true` if `otherNode` is before `node` in the document; otherwise, `false`.
  */

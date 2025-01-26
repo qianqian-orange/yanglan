@@ -1,22 +1,21 @@
 import React from 'react'
-import { DOMEditor } from '@/libs/slate-dom/plugins/dom-editor'
-import { BaseText, Text } from '@/libs/slate/interfaces/text'
-import TextComponent from '@/libs/slate-react/components/Text'
-import ElementComponent from '@/libs/slate-react/components/Element'
-import { BaseElement } from '@/libs/slate/interfaces/element'
-import { Editor } from '@/libs/slate/create-editor'
+import { uniqueId } from 'lodash-es'
+import TextComponent from '@/libs/slate-react/components/text'
+import ElementComponent from '@/libs/slate-react/components/element'
+import { SlateNode, SlateNodeType } from '@/libs/slate/interfaces/node'
 
-export function useChildren({ node }: { node: BaseElement | Editor }) {
+export function useChildren({ node }: { node: SlateNode }) {
   const children = []
   for (let i = 0; i < node.children.length; i++) {
-    const child = node.children[i]
-    const key = DOMEditor.findKey(child)
-    if (Text.isText(child)) {
-      children.push(<TextComponent key={key.id} node={child as BaseText} />)
+    const child = node.children![i]
+    child.return = node
+    // 获取key
+    if (!child.key) child.key = uniqueId()
+    // 文本节点
+    if (child.type === SlateNodeType.span) {
+      children.push(<TextComponent key={child.key} node={child} />)
     } else {
-      children.push(
-        <ElementComponent key={key.id} node={child as BaseElement} />,
-      )
+      children.push(<ElementComponent key={child.key} node={child} />)
     }
   }
   return children

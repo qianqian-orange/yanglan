@@ -50,7 +50,18 @@ code {
     -webkit-font-smoothing: antialiased;
   }
 
+  .icon {
+    color: #ccc;
+    margin-right: 14px;
+    cursor: pointer;
+
+    &:last-child {
+      margin-right: 0;
+    }
+  }
+
   .editable-container {
+    position: relative;
     width: 720px;
     margin: 120px auto;
     background-color: #fff;
@@ -65,5 +76,14 @@ code {
   .editable-content {
     padding: 18px;
     outline: none;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+  }
+
+  .editable-placeholder {
+    position: absolute;
+    opacity: 0.3;
+    pointer-events: none;
+    user-select: none;
   }
 }
