@@ -105,3 +105,9 @@ redis库
 ### 5.1 [npm-run-all](https://www.npmjs.com/package/npm-run-all)
 
 A CLI tool to run multiple npm-scripts in parallel or sequential
+
+## 6. Utils
+
+### 6.1 [is-plain-object](https://www.npmjs.com/package/is-plain-object)
+
+判断是否是对象

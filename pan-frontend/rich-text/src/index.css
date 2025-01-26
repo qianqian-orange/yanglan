@@ -12,6 +12,27 @@ body {
   background-color: #eee;
 }
 
+p,
+blockquote {
+  margin: 0;
+}
+
+[data-slate-editor] > * + * {
+  margin-top: 1em;
+}
+
+blockquote {
+  border-left: 2px solid #ddd;
+  padding-left: 10px;
+  color: #aaa;
+  font-style: italic;
+}
+
+code {
+  background-color: #eee;
+  padding: 3px;
+}
+
 :global {
   .material-icons {
     font-family: 'Material Icons';
@@ -35,7 +56,7 @@ body {
     background-color: #fff;
   }
 
-  .editable-tool-bar {
+  .editable-toolbar {
     display: flex;
     padding: 18px;
     border-bottom: 1px solid #eee;
