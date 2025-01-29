@@ -1,28 +1,37 @@
-import { ActionDispatch, AnyActionArg } from 'react'
 import insertText from './editor/insert-text'
-import { SlateNode, SlateNodeType } from './interfaces/node'
+import deleteContentBackward from './editor/delete-content-backward'
+import SlateEditor from './SlateEditor'
+import SlateNode, { SlateNodeType } from './SlateNode'
 
 export const noop = () => {}
 
-export interface Editor {
-  slateRootNode: SlateNode // SlateNode Tree根节点
-  domEl: HTMLElement | null // 编辑容器节点
-  selection: { node: Node; offset: number } | null
-  forceUpdate: ActionDispatch<AnyActionArg> // 触发更新渲染
-  insertText: (text: string, range: StaticRange) => void // 插入文本
-}
-
-export function createEditor(initialValue?: SlateNode[]): Editor {
-  const editor: Editor = {
-    slateRootNode: {
-      type: SlateNodeType.paragraph,
-      text: '',
-      children: initialValue || [],
+export const renderPlaceholder = (): SlateNode => ({
+  type: SlateNodeType.paragraph,
+  path: [0],
+  children: [
+    {
+      type: SlateNodeType.span,
+      text: 'Enter some rich text…',
+      children: [],
+      path: [0, 0],
+      className: 'editable-placeholder',
     },
+    { type: SlateNodeType.span, text: '\uFEFF', path: [0, 1], children: [] },
+  ],
+})
+
+export function createEditor(initialValue?: SlateNode[]): SlateEditor {
+  const editor = new SlateEditor({
     domEl: null,
-    selection: null,
+    slateRange: null,
+    slateRootNode: {
+      type: SlateNodeType.div,
+      path: [],
+      children: initialValue || [renderPlaceholder()],
+    },
     forceUpdate: noop,
     insertText: (...args) => insertText(editor, ...args),
-  }
+    deleteContentBackward: (...args) => deleteContentBackward(editor, ...args),
+  })
   return editor
 }

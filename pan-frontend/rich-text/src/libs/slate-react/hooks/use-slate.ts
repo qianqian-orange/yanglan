@@ -1,9 +1,9 @@
-import { Editor } from '@/libs/slate/create-editor'
+import SlateEditor from '@/libs/slate/SlateEditor'
 import { createContext, useContext } from 'react'
 
-export const SlateContext = createContext<{ editor: Editor } | null>(null)
+export const SlateContext = createContext<{ editor: SlateEditor } | null>(null)
 
-export function useSlate(): Editor {
+export function useSlate(): SlateEditor {
   const context = useContext(SlateContext)
 
   return context!.editor

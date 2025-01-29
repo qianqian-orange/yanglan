@@ -1,35 +1,26 @@
-import { ELEMENT_TO_NODE } from '@/libs/slate-dom/utils/weak-maps'
-import { Editor } from '../create-editor'
-import { isDOMElement } from '@/libs/slate-dom/utils/dom'
-import { SlateNodeType } from '../interfaces/node'
+import DOMEditor from '@/libs/slate-dom/dom-editor'
+import Editor from '../Editor'
+import { SlateNodeType } from '../SlateNode'
 
 function insertText(editor: Editor, text: string, range: StaticRange) {
-  const { slateRootNode } = editor
-  if (!slateRootNode.children.length) {
-    const child = { type: SlateNodeType.span, text, children: [] }
-    const parent = {
-      type: SlateNodeType.paragraph,
-      text: '',
-      children: [child],
-    }
-    slateRootNode.children.push(parent)
+  const slateRange = (editor.slateRange = DOMEditor.toSlateRange(range))
+  const { anchor, focus } = slateRange
+  const { startContainer, startOffset } = range
+  const slateNode = DOMEditor.toSlateNode(startContainer)
+  // placeholder处理逻辑
+  if (slateNode.text!.startsWith('\uFEFF')) {
+    slateNode.parent!.children = [
+      { type: SlateNodeType.span, text, path: [0, 0] },
+    ]
+    anchor.path[1] = focus.path[1] = 0
     editor.forceUpdate()
     return
   }
-  const { startContainer, startOffset } = range
-  const parentNode = isDOMElement(startContainer)
-    ? startContainer
-    : startContainer.parentNode
-  if (!parentNode) return
-  const textNode = (parentNode as HTMLElement).closest(
-    '[data-slate-node="text"]',
-  )
-  if (!textNode) return
-  const slateNode = ELEMENT_TO_NODE.get(textNode)
-  if (!slateNode) return
-  const before = slateNode.text.slice(0, startOffset)
-  const after = slateNode.text.slice(startOffset)
+  const before = slateNode.text!.slice(0, startOffset)
+  const after = slateNode.text!.slice(startOffset)
   slateNode.text = before + text + after
+  anchor.offset += 1
+  focus.offset += 1
   editor.forceUpdate()
 }
 

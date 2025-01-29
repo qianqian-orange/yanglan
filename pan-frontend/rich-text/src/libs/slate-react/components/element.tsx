@@ -1,13 +1,7 @@
-import React, {
-  PropsWithChildren,
-  CSSProperties,
-  ElementType,
-  memo,
-} from 'react'
-import { isEqual } from 'lodash-es'
+import React, { PropsWithChildren, CSSProperties, ElementType } from 'react'
 import { useChildren } from '../hooks/use-children'
 import { ELEMENT_TO_NODE } from '@/libs/slate-dom/utils/weak-maps'
-import { SlateNode } from '@/libs/slate/interfaces/node'
+import SlateNode from '@/libs/slate/SlateNode'
 
 function renderElement({
   attributes,
@@ -54,9 +48,12 @@ function Element({ node }: { node: SlateNode }) {
 
   const attributes = {
     'data-slate-node': 'element',
-    ref(el: Node) {
+    ref(el: HTMLElement) {
+      node.stateNode = el
       ELEMENT_TO_NODE.set(el, node)
+
       return () => {
+        delete node.stateNode
         ELEMENT_TO_NODE.delete(el)
       }
     },
@@ -65,7 +62,4 @@ function Element({ node }: { node: SlateNode }) {
   return renderElement({ attributes, children, node })
 }
 
-export default memo(Element, (prevProps, nextProps) => {
-  console.log('element')
-  return isEqual(prevProps.node, nextProps.node)
-})
+export default Element

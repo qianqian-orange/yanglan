@@ -1,7 +1,6 @@
-import React, { memo, PropsWithChildren } from 'react'
-import { isEqual } from 'lodash-es'
+import React, { PropsWithChildren } from 'react'
 import { ELEMENT_TO_NODE } from '@/libs/slate-dom/utils/weak-maps'
-import { SlateNode } from '@/libs/slate/interfaces/node'
+import SlateNode from '@/libs/slate/SlateNode'
 
 function renderText({
   attributes,
@@ -29,19 +28,23 @@ function renderText({
 function Text({ node }: { node: SlateNode }) {
   const attributes = {
     'data-slate-node': 'text',
-    ref(el: Node) {
+    className: node.className || '',
+    ref(el: HTMLElement) {
+      node.stateNode = el
       ELEMENT_TO_NODE.set(el, node)
 
       return () => {
+        delete node.stateNode
         ELEMENT_TO_NODE.delete(el)
       }
     },
   }
 
-  return renderText({ attributes, node, children: node.text })
+  return renderText({
+    attributes,
+    node,
+    children: <span data-slate-string>{node.text}</span>,
+  })
 }
 
-export default memo(Text, (prevProps, nextProps) => {
-  console.log('text')
-  return isEqual(prevProps.node, nextProps.node)
-})
+export default Text

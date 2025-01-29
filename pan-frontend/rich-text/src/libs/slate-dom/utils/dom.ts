@@ -1,4 +1,3 @@
-export type DOMPoint = [Node, number]
 /**
  * Check if a DOM node is an element node.
  */

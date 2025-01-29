@@ -6,7 +6,7 @@ import { createEditor, noop } from '@/libs/slate/create-editor'
 
 function Slate() {
   const [, forceUpdate] = useReducer((s) => s + 1, 0)
-  const editor = useMemo(() => createEditor([]), [])
+  const editor = useMemo(() => createEditor(), [])
 
   useEffect(() => {
     editor.forceUpdate = forceUpdate
