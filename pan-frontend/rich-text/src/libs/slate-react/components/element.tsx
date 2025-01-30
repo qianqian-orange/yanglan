@@ -1,7 +1,6 @@
-import React, { PropsWithChildren, CSSProperties, ElementType } from 'react'
+import React, { PropsWithChildren, CSSProperties } from 'react'
 import { useChildren } from '../hooks/use-children'
-import { ELEMENT_TO_NODE } from '@/libs/slate-dom/utils/weak-maps'
-import SlateNode from '@/libs/slate/SlateNode'
+import SlateNode, { ELEMENT_TO_NODE } from '@/libs/slate/SlateNode'
 
 function renderElement({
   attributes,
@@ -12,30 +11,9 @@ function renderElement({
   node: SlateNode
 }>) {
   const style = { textAlign: node.align } as CSSProperties
-  let Component: ElementType = 'p'
-  switch (node.type) {
-    case 'block-quote':
-      Component = 'blockquote'
-      break
-    case 'bulleted-list':
-      Component = 'ul'
-      break
-    case 'numbered-list':
-      Component = 'ol'
-      break
-    case 'list-item':
-      Component = 'li'
-      break
-    case 'heading-one':
-      Component = 'h1'
-      break
-    case 'heading-two':
-      Component = 'h2'
-      break
-    default:
-      Component = 'p'
-      break
-  }
+  // 元素标签
+  const Component = node.tag
+
   return (
     <Component style={style} {...attributes}>
       {children}
@@ -48,12 +26,16 @@ function Element({ node }: { node: SlateNode }) {
 
   const attributes = {
     'data-slate-node': 'element',
+    style: node.style || {},
+    className: node.className || '',
     ref(el: HTMLElement) {
+      // 记录DOM节点
       node.stateNode = el
+      // 记录DOM节点和SlateNode节点映射关系
       ELEMENT_TO_NODE.set(el, node)
 
       return () => {
-        delete node.stateNode
+        node.stateNode = null
         ELEMENT_TO_NODE.delete(el)
       }
     },

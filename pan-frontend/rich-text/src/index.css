@@ -79,11 +79,4 @@ code {
     white-space: pre-wrap;
     word-wrap: break-word;
   }
-
-  .editable-placeholder {
-    position: absolute;
-    opacity: 0.3;
-    pointer-events: none;
-    user-select: none;
-  }
 }

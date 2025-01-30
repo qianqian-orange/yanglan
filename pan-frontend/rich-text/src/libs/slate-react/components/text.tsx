@@ -1,6 +1,5 @@
 import React, { PropsWithChildren } from 'react'
-import { ELEMENT_TO_NODE } from '@/libs/slate-dom/utils/weak-maps'
-import SlateNode from '@/libs/slate/SlateNode'
+import SlateNode, { ELEMENT_TO_NODE } from '@/libs/slate/SlateNode'
 
 function renderText({
   attributes,
@@ -28,13 +27,16 @@ function renderText({
 function Text({ node }: { node: SlateNode }) {
   const attributes = {
     'data-slate-node': 'text',
+    style: node.style || {},
     className: node.className || '',
     ref(el: HTMLElement) {
+      // 记录DOM节点
       node.stateNode = el
+      // 记录DOM节点和SlateNode节点映射关系
       ELEMENT_TO_NODE.set(el, node)
 
       return () => {
-        delete node.stateNode
+        node.stateNode = null
         ELEMENT_TO_NODE.delete(el)
       }
     },
@@ -43,7 +45,7 @@ function Text({ node }: { node: SlateNode }) {
   return renderText({
     attributes,
     node,
-    children: <span data-slate-string>{node.text}</span>,
+    children: <span data-slate-leaf>{node.text}</span>,
   })
 }
 

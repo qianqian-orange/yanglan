@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react'
 import { useChildren } from '../hooks/use-children'
 import { useSlate } from '../hooks/use-slate'
-import DOMEditor from '@/libs/slate-dom/dom-editor'
+import SlateRange from '@/libs/slate/SlateRange'
 
 function Children() {
   const editor = useSlate()
@@ -17,26 +17,34 @@ function Editable() {
       const [staticRange] = event.getTargetRanges()
       console.log('beforeinput', event.inputType, event.data, staticRange)
       switch (event.inputType) {
+        // 插入文本
         case 'insertText':
           editor.insertText(event.data || '', staticRange)
           break
+        // 插入行
+        case 'insertParagraph':
+          editor.insertParagraph(staticRange)
+          break
+        // 删除文本
         case 'deleteContentBackward':
           editor.deleteContentBackward(staticRange)
           break
       }
     }
-    editor.domEl!.addEventListener('beforeinput', onDOMBeforeInput)
+    editor.domEl?.addEventListener('beforeinput', onDOMBeforeInput)
     return () => {
-      editor.domEl!.removeEventListener('beforeinput', onDOMBeforeInput)
+      editor.domEl?.removeEventListener('beforeinput', onDOMBeforeInput)
     }
   }, [])
 
-  // 设置光标选择区域
   useEffect(() => {
+    // 获取Selection对象
     const selection = document.getSelection()
     if (!selection || !editor.slateRange) return
-    const range = DOMEditor.toDOMRange(editor)
+    // 获取StaticRange对象
+    const range = SlateRange.toDOMRange(editor.slateRootNode, editor.slateRange)
     const { startContainer, startOffset, endContainer, endOffset } = range
+    // 设置光标选择区域
     selection.setBaseAndExtent(
       startContainer,
       startOffset,
