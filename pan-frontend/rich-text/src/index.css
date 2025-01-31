@@ -50,7 +50,7 @@ code {
     -webkit-font-smoothing: antialiased;
   }
 
-  .icon {
+  .editable-icon {
     color: #ccc;
     margin-right: 14px;
     cursor: pointer;
@@ -58,6 +58,10 @@ code {
     &:last-child {
       margin-right: 0;
     }
+  }
+
+  .editable-icon-active {
+    color: #000;
   }
 
   .editable-container {

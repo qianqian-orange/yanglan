@@ -1,7 +1,6 @@
 import { CSSProperties, JSX } from 'react'
 import { uniqueId } from 'lodash-es'
 import { isDOMElement } from '../slate-dom/utils/dom'
-import SlatePoint from './SlatePoint'
 
 // dom节点与slateNode节点映射关系
 export const ELEMENT_TO_NODE: WeakMap<Node, SlateNode> = new WeakMap()
@@ -63,11 +62,7 @@ class SlateNode {
     return slateNode
   }
 
-  static toSlateNodeByPoint(
-    slateNode: SlateNode,
-    point: SlatePoint,
-  ): SlateNode {
-    const { path } = point
+  static toSlateNodeByPath(slateNode: SlateNode, path: number[]): SlateNode {
     for (let i = 0; i < path.length; i++) {
       slateNode = slateNode.children[path[i]]
     }

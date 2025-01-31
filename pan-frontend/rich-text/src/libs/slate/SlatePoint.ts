@@ -16,10 +16,11 @@ class SlatePoint {
   }
 
   static toDOMPoint(slateNode: SlateNode, point: SlatePoint): [Node, number] {
-    slateNode = SlateNode.toSlateNodeByPoint(slateNode, point)
+    const { path, offset } = point
+    slateNode = SlateNode.toSlateNodeByPath(slateNode, path)
     const el =
       slateNode.stateNode!.querySelector('[data-slate-leaf]')!.childNodes[0]
-    return [el, point.offset]
+    return [el, offset]
   }
 }
 

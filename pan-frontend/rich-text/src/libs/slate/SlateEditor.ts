@@ -8,17 +8,20 @@ class SlateEditor {
   domEl: HTMLElement | null // 编辑容器节点
   slateRootNode: SlateNode // SlateNode Tree根节点
   slateSelection: SlateSelection | null // 对标Selection对象，有两个属性，anchor是选择区域开始锚点，focus是选择区域结束锚点
+  marks: Set<string> // 记录操作栏中已选操作
   forceUpdate: ActionDispatch<AnyActionArg> // 触发更新渲染
 
   constructor({
     domEl = null,
     slateSelection = null,
     slateRootNode = new SlateNode({ tag: 'div' }),
+    marks = new Set(),
     forceUpdate = noop,
   }: Partial<SlateEditor>) {
     this.domEl = domEl
     this.slateSelection = slateSelection
     this.slateRootNode = slateRootNode
+    this.marks = marks
     this.forceUpdate = forceUpdate
   }
 
@@ -27,7 +30,10 @@ class SlateEditor {
     // anchor为选择区域开始锚点，focus为选择区域结束锚点
     const { anchor, focus } = this.slateSelection!
     // 获取开始锚点对应的SlateNode节点
-    const slateNode = SlateNode.toSlateNodeByPoint(this.slateRootNode, anchor)
+    const slateNode = SlateNode.toSlateNodeByPath(
+      this.slateRootNode,
+      anchor.path,
+    )
     // 如果文本内容以\uFEFF开头，说明当前行没有输入内容，则直接替换成输入文本内容即可
     if (slateNode.text.startsWith('\uFEFF')) {
       slateNode.parent!.children = [
@@ -64,7 +70,10 @@ class SlateEditor {
     // 获取换行文本内容
     let text = ''
     // 开始锚点对应的SlateNode节点
-    const slateNode = SlateNode.toSlateNodeByPoint(this.slateRootNode, anchor)
+    const slateNode = SlateNode.toSlateNodeByPath(
+      this.slateRootNode,
+      anchor.path,
+    )
     text += slateNode.text.slice(anchor.offset)
     slateNode.text = slateNode.text.slice(0, anchor.offset)
     const parent = slateNode.parent!
@@ -90,7 +99,10 @@ class SlateEditor {
   // 删除文本
   public deleteContentBackward() {
     const { anchor, focus } = this.slateSelection!
-    const slateNode = SlateNode.toSlateNodeByPoint(this.slateRootNode, anchor)
+    const slateNode = SlateNode.toSlateNodeByPath(
+      this.slateRootNode,
+      anchor.path,
+    )
     // 当前行开头删除处理逻辑
     if (slateNode.text.startsWith('\uFEFF') || !anchor.offset) {
       // 当前行坐标
@@ -145,6 +157,27 @@ class SlateEditor {
           ? renderPlaceholder().children
           : renderParagraph().children
       anchor.offset = focus.offset = 1
+    }
+    this.forceUpdate()
+  }
+
+  // 处理操作栏操作逻辑
+  public addMark(key: string) {
+    const { anchor, focus } = this.slateSelection!
+    if (this.marks.has(key)) this.marks.delete(key)
+    else this.marks.add(key)
+    switch (key) {
+      case 'h1':
+      case 'h2':
+      case 'blockquote':
+      case 'ol':
+      case 'ul': {
+        for (let i = anchor.path[0]; i <= focus.path[0]; i++) {
+          const slateNode = SlateNode.toSlateNodeByPath(this.slateRootNode, [i])
+          slateNode.tag = key
+        }
+        break
+      }
     }
     this.forceUpdate()
   }
