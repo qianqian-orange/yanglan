@@ -26,9 +26,8 @@ function renderText({
 
 function Text({ node }: { node: SlateNode }) {
   const attributes = {
+    ...node.attributes,
     'data-slate-node': 'text',
-    style: node.style || {},
-    className: node.className || '',
     ref(el: HTMLElement) {
       // 记录DOM节点
       node.stateNode = el

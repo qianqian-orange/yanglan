@@ -11,6 +11,7 @@ class SlatePoint {
 
   static toSlatePoint(el: Node, offset: number): SlatePoint {
     const slateNode = SlateNode.toSlateNodeByEl(el)
+    if (slateNode.text.startsWith('\uFEFF')) offset = 1
     return new SlatePoint({ path: slateNode.path, offset })
   }
 

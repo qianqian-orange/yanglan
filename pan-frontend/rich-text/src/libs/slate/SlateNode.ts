@@ -19,8 +19,11 @@ class SlateNode {
   italic?: boolean // 是否是斜体
   underline?: boolean // 是否有下划线
   align?: 'left' | 'center' | 'right' // 文本水平位置
-  className?: string // class类名
-  style?: CSSProperties // style样式
+  attributes: {
+    className?: string // class类名
+    style?: CSSProperties // style样式
+    contentEditable?: boolean // 是否可编辑
+  }
 
   constructor({
     tag = 'div',
@@ -35,8 +38,7 @@ class SlateNode {
     italic,
     underline,
     align,
-    className,
-    style,
+    attributes = {},
   }: Partial<SlateNode>) {
     this.tag = tag
     this.key = key
@@ -50,8 +52,7 @@ class SlateNode {
     this.italic = italic
     this.underline = underline
     this.align = align
-    this.className = className
-    this.style = style
+    this.attributes = attributes
   }
 
   // 获取DOM节点对应的SlateNode节点

@@ -1,13 +1,13 @@
 import SlateEditor from './SlateEditor'
 import SlateNode from './SlateNode'
 
-export const renderParagraph = (): SlateNode =>
+export const renderParagraph = (text = ''): SlateNode =>
   new SlateNode({
     tag: 'p',
     children: [
       new SlateNode({
         tag: 'span',
-        text: '\uFEFF',
+        text: text || '\uFEFF',
       }),
     ],
   })
@@ -21,11 +21,14 @@ export const renderPlaceholder = (): SlateNode =>
       new SlateNode({
         tag: 'span',
         text: 'Enter some rich text…',
-        style: {
-          position: 'absolute',
-          opacity: 0.3,
-          pointerEvents: 'none', // 忽略鼠标点击事件
-          userSelect: 'none', // 内容不可选中
+        attributes: {
+          style: {
+            position: 'absolute',
+            opacity: 0.3,
+            pointerEvents: 'none', // 忽略鼠标点击事件
+            userSelect: 'none', // 内容不可选中
+          },
+          contentEditable: false,
         },
       }),
     ],

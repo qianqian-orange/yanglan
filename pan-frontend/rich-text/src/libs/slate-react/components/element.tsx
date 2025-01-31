@@ -25,9 +25,8 @@ function Element({ node }: { node: SlateNode }) {
   const children = useChildren({ node })
 
   const attributes = {
+    ...node.attributes,
     'data-slate-node': 'element',
-    style: node.style || {},
-    className: node.className || '',
     ref(el: HTMLElement) {
       // 记录DOM节点
       node.stateNode = el
