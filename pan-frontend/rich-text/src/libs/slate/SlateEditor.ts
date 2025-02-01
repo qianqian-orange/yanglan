@@ -114,15 +114,19 @@ class SlateEditor {
       )
       // 获取当前行文本内容
       let text = ''
-      for (let i = 0; i < paragraph.children.length; i++) {
-        text += paragraph.children[i].text
+      const firstChild = paragraph.children[0]
+      if (!firstChild.text.startsWith('\uFEFF')) {
+        for (let i = 0; i < paragraph.children.length; i++) {
+          text += paragraph.children[i].text
+        }
       }
       const prevParagraph = this.slateRootNode.children[paragraphLocation - 1]
       const lastChildIndex = prevParagraph.children.length - 1
       const lastChild = prevParagraph.children[lastChildIndex]
-      lastChild.text = lastChild.text.startsWith('\uFEFF')
-        ? text
-        : lastChild.text + text
+      lastChild.text =
+        text && lastChild.text.startsWith('\uFEFF')
+          ? text
+          : lastChild.text + text
       // 如果只有一个子节点且文本内容为空则展示占位节点
       if (
         this.slateRootNode.children.length === 1 &&
