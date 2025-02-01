@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react'
+import React, { useEffect, useLayoutEffect } from 'react'
 import { useChildren } from '../hooks/use-children'
 import { useSlate } from '../hooks/use-slate'
 import SlateSelection from '@/libs/slate/SlateSelection'
@@ -11,7 +11,7 @@ function Children() {
 function Editable() {
   const editor = useSlate()
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const onDOMSelectionChange = () => {
       const domSelection = document.getSelection()
       if (!domSelection) return
@@ -21,8 +21,8 @@ function Editable() {
         editor.domEl?.contains(focusNode)
       ) {
         editor.slateSelection = SlateSelection.toSlateSelection(domSelection)
-      } else {
-        editor.slateSelection = null
+        editor.bubbleProperties()
+        editor.forceUpdate()
       }
     }
     document.addEventListener('selectionchange', onDOMSelectionChange)
@@ -31,13 +31,14 @@ function Editable() {
     }
   }, [])
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const onDOMBeforeInput = (event: InputEvent) => {
       event.preventDefault()
       switch (event.inputType) {
         // 插入文本
         case 'insertText':
-          editor.insertText(event.data || '')
+          if (!event.data) return
+          editor.insertText(event.data)
           break
         // 插入行
         case 'insertParagraph':
@@ -73,6 +74,10 @@ function Editable() {
       endOffset,
     )
   })
+
+  useEffect(() => {
+    editor.domEl?.focus()
+  }, [])
 
   return (
     <div

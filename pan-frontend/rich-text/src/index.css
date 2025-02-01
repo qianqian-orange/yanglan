@@ -68,6 +68,7 @@ code {
     width: 720px;
     margin: 120px auto;
     background-color: #fff;
+    overflow: hidden;
   }
 
   .editable-toolbar {
@@ -78,7 +79,7 @@ code {
 
   .editable-content {
     position: relative;
-    padding: 18px;
+    margin: 18px;
     outline: none;
     white-space: pre-wrap;
     word-wrap: break-word;

@@ -1,4 +1,4 @@
-import React, { PropsWithChildren, CSSProperties } from 'react'
+import React, { PropsWithChildren } from 'react'
 import { useChildren } from '../hooks/use-children'
 import SlateNode, { ELEMENT_TO_NODE } from '@/libs/slate/SlateNode'
 
@@ -10,7 +10,7 @@ function renderElement({
   attributes: { [key: string]: unknown }
   node: SlateNode
 }>) {
-  const style = { textAlign: node.align } as CSSProperties
+  const style = { textAlign: node.align }
   // 元素标签
   const Component = node.tag
 
