@@ -16,7 +16,7 @@ Queue.prototype.push = function (val) {
 
 Queue.prototype.pop = function () {
   this.peek()
-  return this.s1.pop()
+  return this.s2.pop()
 }
 
 Queue.prototype.peek = function () {

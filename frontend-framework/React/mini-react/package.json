@@ -9,7 +9,7 @@
     "build:dll": "webpack --config configs/webpack.dll.js"
   },
   "keywords": [],
-  "author": "",
+  "author": "qianqian",
   "license": "ISC",
   "description": "",
   "browserslist": [

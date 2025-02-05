@@ -68,6 +68,53 @@ function right_bound(nums, target) {
 
 ## 1.3 滑动窗口
 
+给你一个字符串 s 、一个字符串 t 。返回 s 中涵盖 t 所有字符的最小子串。如果 s 中不存在涵盖 t 所有字符的子串，则返回空字符串 "" 。
+
+示例 1：
+
+输入：s = "ADOBECODEBANC", t = "ABC"
+
+输出："BANC"
+
+解释：最小覆盖子串 "BANC" 包含来自字符串 t 的 'A'、'B' 和 'C'。
+
+```javascript
+function minWindow(s, t) {
+  const need = {}
+  for (let i = 0; i < t.length; i++) {
+    const c = t[i]
+    need[c] = (need[c] || 0) + 1
+  }
+  const windows = {}
+  let valid = 0
+  let left = 0
+  let right = 0
+  let len = Number.MAX_VALUE
+  let start = 0
+  while (right < s.length) {
+    const c = s[right]
+    right++
+    if (need[c]) {
+      windows[c] = (windows[c] || 0) + 1
+      if (windows[c] === need[c]) valid += 1
+    }
+    while (valid === Object.keys(need).length) {
+      if (right - left < len) {
+        len = right - left
+        start = left
+      }
+      const d = s[left]
+      left++
+      if (need[d]) {
+        if (windows[d] === need[d]) valid -= 1
+        windows[d] -= 1
+      }
+    }
+  }
+  return len === Number.MAX_VALUE ? '' : s.substr(start, len)
+}
+```
+
 ## 1.4 单调栈
 
 nums1 中数字 x 的 下一个更大元素 是指 x 在 nums2 中对应位置 右侧 的 第一个 比 x 大的元素。
