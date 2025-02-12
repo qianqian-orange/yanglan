@@ -54,11 +54,15 @@
    }
    ```
 
-### 1.5 Database Client
+### 1.5 Tailwind CSS IntelliSense
+
+Tailwind CSS提示插件
+
+### 1.6 Database Client
 
 数据库可视化
 
-### 1.6 GitLens — Git supercharged
+### 1.7 GitLens — Git supercharged
 
 git插件
 
