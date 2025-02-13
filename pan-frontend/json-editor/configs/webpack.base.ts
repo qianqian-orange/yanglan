@@ -30,6 +30,7 @@ const config: webpack.Configuration = {
             loader: 'css-loader',
             options: {
               modules: {
+                auto: true,
                 exportGlobals: true,
                 localIdentName: '[local]--[hash:base64]',
               },
@@ -39,7 +40,7 @@ const config: webpack.Configuration = {
             loader: 'postcss-loader',
             options: {
               postcssOptions: {
-                plugins: ['postcss-preset-env', '@tailwindcss/postcss'],
+                plugins: ['@tailwindcss/postcss', 'postcss-preset-env'],
               },
             },
           },

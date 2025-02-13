@@ -6,6 +6,12 @@
       {
         "ignorePseudoClasses": ["export", "global", "local"]
       }
+    ],
+    "at-rule-no-unknown": [
+      true,
+      {
+        "ignoreAtRules": ["theme"]
+      }
     ]
   }
 }
