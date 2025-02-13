@@ -11,7 +11,6 @@ export default [
   ...tseslint.configs.recommended,
   pluginReact.configs.flat.recommended,
   {
-    ignores: ['configs/**/*.ts', 'dist/**/*.js'],
     settings: {
       react: {
         version: 'detect',
