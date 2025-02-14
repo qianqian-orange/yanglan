@@ -4,7 +4,7 @@ import { Button } from '../ui/button'
 
 type Theme = 'light' | 'dark'
 
-function Header() {
+export function Header() {
   const [theme, setTheme] = useState<Theme>(
     (localStorage.getItem('theme') || 'light') as Theme,
   )
@@ -35,5 +35,3 @@ function Header() {
     </div>
   )
 }
-
-export { Header }

@@ -3,11 +3,11 @@ import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
 import { useToast } from '@/hooks/use-toast'
-import { useJSONStore } from '@/stores/useJSONStore'
+import { useJsonStore } from '../../stores'
 
-function ImportButton({ className = '' }: { className?: string }) {
+export function ImportButton({ className = '' }: { className?: string }) {
   const { toast } = useToast()
-  const updateJSONString = useJSONStore(state => state.updateJSONString)
+  const setJsonString = useJsonStore(state => state.setJsonString)
 
   return (
     <div className={className}>
@@ -37,12 +37,10 @@ function ImportButton({ className = '' }: { className?: string }) {
           reader.readAsText(file)
           reader.onload = function (evt) {
             const content = evt.target?.result
-            if (content) updateJSONString(content as string)
+            if (content) setJsonString(content as string)
           }
         }}
       />
     </div>
   )
 }
-
-export { ImportButton }

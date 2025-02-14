@@ -1,10 +1,10 @@
 import React from 'react'
 import { uniqueId } from 'lodash-es'
 import { Button } from '@/components/ui/button'
-import { useJSONStore } from '@/stores/useJSONStore'
+import { useJsonStore } from '../../stores'
 
-function ExportButton() {
-  const jsonString = useJSONStore(state => state.jsonString)
+export function ExportButton() {
+  const jsonString = useJsonStore(state => state.jsonString)
 
   return (
     <Button
@@ -23,5 +23,3 @@ function ExportButton() {
     </Button>
   )
 }
-
-export { ExportButton }
