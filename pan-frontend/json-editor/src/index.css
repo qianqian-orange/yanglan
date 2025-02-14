@@ -1,6 +1,8 @@
 /* stylelint-disable import-notation */
 @import 'tailwindcss';
 
+@config '../tailwind.config.ts';
+
 [role='button'],
 button {
   cursor: pointer;
@@ -76,9 +78,33 @@ button {
   --radius-lg: var(--radius);
 }
 
+@layer base {
+  /* 这个样式配置需要放到base这个样式层里面，生成的样式才会置于样式顺序前列，不会覆盖掉border-[value]等类名的样式 */
+  * {
+    border-color: hsl(var(--border));
+    scrollbar-width: thin;
+    scrollbar-color: hsl(var(--border)) transparent;
+  }
+}
+
 body {
   background-color: hsl(var(--background));
   color: hsl(var(--foreground));
+  scroll-behavior: smooth;
+  overscroll-behavior: none;
+}
+
+::-webkit-scrollbar {
+  width: 5px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: hsl(var(--border));
+  border-radius: 5px;
 }
 
 .border-grid {
