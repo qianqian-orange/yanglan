@@ -5,12 +5,12 @@ import { Input } from '@/components/ui/input'
 import { useToast } from '@/hooks/use-toast'
 import { useJSONStore } from '@/stores/useJSONStore'
 
-function ImportButton() {
+function ImportButton({ className = '' }: { className?: string }) {
   const { toast } = useToast()
   const updateJSONString = useJSONStore(state => state.updateJSONString)
 
   return (
-    <>
+    <div className={className}>
       <Button asChild>
         <Label htmlFor='json-import'>导入</Label>
       </Button>
@@ -41,7 +41,7 @@ function ImportButton() {
           }
         }}
       />
-    </>
+    </div>
   )
 }
 

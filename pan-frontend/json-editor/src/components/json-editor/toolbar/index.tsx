@@ -5,9 +5,7 @@ import { ExportButton } from './export-button'
 function Toolbar() {
   return (
     <div className='flex justify-end'>
-      <div className='mr-2'>
-        <ImportButton />
-      </div>
+      <ImportButton className='mr-2' />
       <ExportButton />
     </div>
   )

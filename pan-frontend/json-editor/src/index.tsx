@@ -10,7 +10,7 @@ function App() {
     <>
       <div className='relative flex min-h-svh flex-col'>
         <Header />
-        <div className='flex flex-1 px-60 py-8'>
+        <div className='mx-auto flex w-full flex-1 overflow-auto p-8'>
           <JSONEditor />
         </div>
       </div>
