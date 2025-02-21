@@ -40,7 +40,7 @@ const config: webpack.Configuration = {
             loader: 'postcss-loader',
             options: {
               postcssOptions: {
-                plugins: ['@tailwindcss/postcss', 'postcss-preset-env'],
+                plugins: ['postcss-preset-env'],
               },
             },
           },
