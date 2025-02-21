@@ -1,12 +1,11 @@
 {
-  "name": "zustand",
+  "name": "mini-zustand",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
   "scripts": {
     "build": "cross-env NODE_ENV=production webpack --config configs/webpack.prod.ts",
-    "start": "cross-env NODE_ENV=development webpack serve --config configs/webpack.dev.ts",
-    "server": "node server.js"
+    "start": "cross-env NODE_ENV=development webpack serve --config configs/webpack.dev.ts"
   },
   "keywords": [],
   "author": "",
