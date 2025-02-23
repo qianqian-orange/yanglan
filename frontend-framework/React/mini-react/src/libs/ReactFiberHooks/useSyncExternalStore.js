@@ -21,7 +21,7 @@ function subscribeToStore(fiber, hook, subscribe) {
     const [prevSnapshot, getSnapshot] = hook.memoizedState
     const nextSnapshot = getSnapshot()
     // 比对新旧值是否相同，如果不相同更新Hook对象memoizedState属性，触发更新渲染
-    if (nextSnapshot !== prevSnapshot) {
+    if (!Object.is(prevSnapshot, nextSnapshot)) {
       hook.memoizedState[0] = nextSnapshot
       forceStoreRerender(fiber)
     }
