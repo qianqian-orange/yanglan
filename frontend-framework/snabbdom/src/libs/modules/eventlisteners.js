@@ -26,8 +26,8 @@ function updateEventListeners(oldVnode, newVnode) {
   const oldOn = oldVnode.data?.on
   const oldListener = oldVnode.listener
   const oldElm = oldVnode.elm
-  const on = oldVnode.data?.on
-  const elm = newVnode.elm
+  const on = newVnode?.data?.on
+  const elm = newVnode?.elm
   if (oldOn === on) return
   if (oldOn && oldListener) {
     if (!on) {

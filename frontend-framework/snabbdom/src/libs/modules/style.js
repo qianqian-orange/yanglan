@@ -1,9 +1,11 @@
 function updateStyle(oldVnode, newVnode) {
   const elm = newVnode.elm
-  const oldStyle = oldVnode.data?.style
-  const newStyle = newVnode.data?.style
+  let oldStyle = oldVnode.data?.style
+  let newStyle = newVnode.data?.style
   if (!oldStyle && !newStyle) return
   if (oldStyle === newStyle) return
+  oldStyle = oldStyle || {}
+  newStyle = newStyle || {}
   for (const key in oldStyle) {
     elm.style[key] = ''
   }

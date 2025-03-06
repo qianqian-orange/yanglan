@@ -1,7 +1,11 @@
 function updateAttributes(oldVnode, newVnode) {
-  const oldAttrs = oldVnode.data?.attrs
-  const newAttrs = newVnode.data?.attrs
+  let oldAttrs = oldVnode.data?.attrs
+  let newAttrs = newVnode.data?.attrs
   const elm = newVnode.elm
+  if (!oldAttrs && !newAttrs) return
+  if (oldAttrs === newAttrs) return
+  oldAttrs = oldAttrs || {}
+  newAttrs = newAttrs || {}
   for (const key in oldAttrs) {
     if (!Object.prototype.hasOwnProperty.call(newAttrs, key)) {
       elm.removeAttribute(key)
