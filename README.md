@@ -67,25 +67,30 @@
 - monorepo
 - 脚手架
 
-## 七. Vue
-
-## 八. React
+## 七. React
 
 - Fibe 架构
 - 事件合成机制
 - schduler 任务调度器
 - 服务端渲染
 
-## 九. Node
+## 八. Node
 
-- express
+- 框架
+  - express
+  - koa
+  - nest.js
 
-## 十. 微前端
+## 九. 微前端
 
 - 技术栈无关
-- qiankun
+- 解决方案
+  - qiankun
+  - wujie（基于iframe）
+  - MicroApp（基于Web Components）
+  - Webpack联邦模块
 
-## 十一. 数据结构与算法
+## 十. 数据结构与算法
 
 - 数据结构
   - 数组
