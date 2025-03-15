@@ -115,7 +115,7 @@ const config: webpack.Configuration = {
   resolve: {
     alias: {
       '@': resolvePath('../src'),
-      preact: resolvePath('../src/libs'),
+      // preact: resolvePath('../src/libs'),
     },
     extensions: ['.js', '.ts', '.jsx', '.tsx'],
     modules: [resolvePath('../src'), resolvePath('../node_modules')],
