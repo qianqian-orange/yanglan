@@ -6,7 +6,13 @@ export function Observable(subscribe) {
 
 Observable.prototype.subscribe = function (observerOrNext, error, complete) {
   const subscriber = new Subscriber(observerOrNext, error, complete)
-  subscriber.add(this._trySubscribe(subscriber))
+  const operator = this.operator
+  const source = this.source
+  subscriber.add(
+    operator
+      ? operator.call(subscriber, source)
+      : this._trySubscribe(subscriber),
+  )
   return subscriber
 }
 
@@ -16,4 +22,17 @@ Observable.prototype._trySubscribe = function (subscriber) {
   } catch (err) {
     subscriber.error(err)
   }
+}
+
+Observable.prototype.lift = function (operator) {
+  const observable = new Observable()
+  observable.source = this
+  observable.operator = operator
+  return observable
+}
+
+Observable.prototype.pipe = function (...operations) {
+  return (function piped(input) {
+    return operations.reduce((prev, operation) => operation(prev), input)
+  })(this)
 }
