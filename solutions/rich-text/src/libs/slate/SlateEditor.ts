@@ -169,7 +169,7 @@ class SlateEditor {
     // 当前行开头删除处理逻辑
     if (slateNode.isEmpty() || !anchor.offset) {
       // 在首行开头则直接跳过
-      if (anchor.path.every((p) => p === 0)) return
+      if (anchor.path.every(p => p === 0)) return
       // 当前行坐标
       const paragraphLocation = parentNode.path[parentNode.path.length - 1]
       const [paragraph] = rootNode.children.splice(paragraphLocation, 1)

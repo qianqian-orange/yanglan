@@ -7,7 +7,7 @@ import SlateNode from '@/libs/slate/SlateNode'
 import { createEditor } from '@/libs/slate/create-editor'
 
 function Slate({ initialValue }: { initialValue?: SlateNode[] }) {
-  const [, forceUpdate] = useReducer((s) => s + 1, 0)
+  const [, forceUpdate] = useReducer(s => s + 1, 0)
   const editor = useMemo(() => createEditor(initialValue), [])
 
   useEffect(() => {

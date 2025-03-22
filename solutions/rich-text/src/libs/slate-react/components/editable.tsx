@@ -81,7 +81,7 @@ function Editable() {
 
   return (
     <div
-      ref={(el) => {
+      ref={el => {
         editor.domEl = el
         return () => {
           editor.domEl = null

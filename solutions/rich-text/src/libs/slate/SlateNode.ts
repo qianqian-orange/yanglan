@@ -83,7 +83,7 @@ class SlateNode {
   }
 
   string() {
-    return this.children.map((child) => child.text).join('')
+    return this.children.map(child => child.text).join('')
   }
 
   addFlag(flag: number, resetFlag: number) {
@@ -95,7 +95,7 @@ class SlateNode {
   }
 
   setProps(keys: Prop[]) {
-    keys.forEach((key) => {
+    keys.forEach(key => {
       switch (key) {
         case 'textAlign': {
           let textAlign: CSSProperties['textAlign']
