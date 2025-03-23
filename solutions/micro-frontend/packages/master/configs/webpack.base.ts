@@ -19,7 +19,6 @@ const config: webpack.Configuration = {
     clean: {
       keep: /dll|common/,
     },
-    libraryTarget: 'system',
   },
   module: {
     rules: [
@@ -92,7 +91,6 @@ const config: webpack.Configuration = {
   },
   plugins: [
     new HtmlWebpackPlugin({
-      inject: false,
       template: resolvePath('../public/index.html'),
     }),
     new ForkTsCheckerWebpackPlugin(),

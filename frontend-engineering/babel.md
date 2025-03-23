@@ -35,7 +35,7 @@ babel 是一个 JavaScript 编译器。
 ;async (api, options, dirname) => {
   const plugins = [[() => {}, {}]]
   return {
-    plugins
+    plugins,
   }
 }
 ```
@@ -45,7 +45,7 @@ babel 是一个 JavaScript 编译器。
 ```javascript
 ;async (api, options, dirname) => {
   return {
-    visitor
+    visitor,
   }
 }
 ```
