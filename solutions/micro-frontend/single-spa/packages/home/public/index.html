@@ -3,17 +3,20 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>micro-app-master</title>
+    <title>micro-app-home</title>
   </head>
   <body>
-    <div id="app"></div>
+    <div id="subapp"></div>
     <script src="/common/system.0579ab.js"></script>
     <script type="systemjs-importmap">
       {
         "imports": {
-          "@qianqian/account": "http://localhost:8001/main.js"
+          "@qianqian/home": "http://localhost:8002/main.js"
         }
       }
+    </script>
+    <script>
+      System.import('@qianqian/home')
     </script>
   </body>
 </html>

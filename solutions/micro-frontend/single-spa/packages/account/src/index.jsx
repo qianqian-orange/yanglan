@@ -3,27 +3,29 @@ import { createRoot } from 'react-dom/client'
 import App from './App'
 import './index.css'
 
+let root = null
+
 const lifecycles = {
   bootstrap(opts) {
-    console.log('bootstrap', opts)
+    console.log('account bootstrap', opts)
     return Promise.resolve()
   },
   mount(opts) {
     return new Promise(resolve => {
-      console.log('mount', opts)
-      const root = createRoot(document.querySelector('#subapp'))
+      console.log('account mount', opts)
+      root = createRoot(document.querySelector('#subapp'))
       root.render(<App />)
-      // opts.renderResults[opts.name] = root
       resolve()
     })
   },
   unmount(opts) {
     return new Promise(resolve => {
-      console.log('unmount', opts)
+      console.log('account unmount', opts)
+      if (root) {
+        root.unmount()
+        root = null
+      }
       resolve()
-      // opts.unmountResolves[opts.name] = resolve
-      // const root = opts.renderResults[opts.name]
-      // root.unmount()
     })
   },
 }

@@ -1,0 +1,22 @@
+const path = require('path')
+import webpack from 'webpack'
+import { Configuration } from 'webpack-dev-server'
+const { merge } = require('webpack-merge')
+const baseConfig = require('./webpack.base')
+
+const resolvePath = (...paths: string[]) => path.join(__dirname, ...paths)
+
+const config: webpack.Configuration & Configuration = {
+  mode: 'development',
+  devtool: 'inline-source-map',
+  devServer: {
+    port: 8002,
+    static: resolvePath('../dist'),
+    open: true,
+    headers: {
+      'Access-Control-Allow-Origin': '*',
+    },
+  },
+}
+
+module.exports = merge(baseConfig, config)

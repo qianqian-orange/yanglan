@@ -50,16 +50,23 @@
 - MIME 类型
 - 常见 Web 攻击方式
 
-## 六. 工程化
+## 六. 前端工程化
 
-- npm、yarn、pnpm
+- 包管理器
+  - npm
+  - yarn
+  - pnpm
 - babel
-- webpack
-  - 热更新
-  - 动态加载
-  - 代码分割
-  - tree shaking
-  - 联邦模块
+- 模块打包器
+  - webpack
+    - 热更新
+    - 动态加载
+    - 代码分割
+    - tree shaking
+    - 联邦模块
+  - vite
+  - esbuild
+  - rollup
 - typescript
 - eslint
 - stylelint
@@ -79,20 +86,9 @@
 - 框架
   - express
   - koa
-  - nest.js
+  - Nest.js
 
-## 九. 微前端
-
-- 优点
-  - 技术栈无关
-  - 协作效率
-- 解决方案
-  - qiankun
-  - wujie（基于iframe）
-  - MicroApp（基于Web Components）
-  - Webpack联邦模块
-
-## 十. 数据结构与算法
+## 九. 数据结构与算法
 
 - 数据结构
   - 数组
@@ -110,6 +106,25 @@
   - 回溯算法
   - 排序算法
 
-## 十一. 解决方案
+## 十. 解决方案
 
+- 微前端
+  - 优点
+    - 技术栈无关
+    - 协作效率
+  - 解决方案
+    - qiankun
+    - wujie（基于iframe）
+    - MicroApp（基于Web Components）
+    - Webpack联邦模块
 - 富文本
+  - Slate
+  - ProseMirror
+  - Tiptap
+  - Quill
+  - Lexical
+- 跨端
+  - Taro
+  - Flutter
+  - ReactNative
+  - Electron
