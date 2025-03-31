@@ -4,7 +4,7 @@ import {
   InputContinuousLane,
   NoLanes,
   SyncLane,
-} from '../ReactFiberLane'
+} from './ReactFiberLane'
 
 export const NoEventPriority = NoLanes
 export const DiscreteEventPriority = SyncLane

@@ -1,6 +1,6 @@
-import { DefaultLane } from './ReactFiberLane'
-import FiberRootNode from './ReactFiberRoot'
-import { scheduleUpdateOnFiber } from './ReactFiberWorkLoop'
+import { DefaultLane } from '../../react-reconciler/ReactFiberLane'
+import FiberRootNode from '../../react-reconciler/ReactFiberRoot'
+import { scheduleUpdateOnFiber } from '../../react-reconciler/ReactFiberWorkLoop'
 
 /**
  * @param {*} root FiberRootNode对象
@@ -24,7 +24,7 @@ ReactDOMRoot.prototype.render = function (children) {
  * @param {*} element DOM节点
  */
 function createRoot(element) {
-  element.addEventListener('click', (event) => {
+  element.addEventListener('click', event => {
     if (event.target.onClick) event.target.onClick()
   })
   const root = new FiberRootNode(element)

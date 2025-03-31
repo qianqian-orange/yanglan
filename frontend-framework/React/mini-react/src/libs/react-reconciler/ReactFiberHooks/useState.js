@@ -28,7 +28,7 @@ function dispatchSetState(fiber, hook, action) {
     if (Object.is(currentState, newState)) return
   }
   // 收集更新state的方法，在创建新FiberNode节点时执行
-  hook.queue.push((state) => reducer(state, action))
+  hook.queue.push(state => reducer(state, action))
   const root = enqueueConcurrentRenderForLane(fiber, SyncLane)
   // 触发更新渲染
   scheduleUpdateOnFiber(root, SyncLane)

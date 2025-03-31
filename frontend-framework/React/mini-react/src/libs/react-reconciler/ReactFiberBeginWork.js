@@ -10,9 +10,9 @@ import {
 import { NoLanes } from './ReactFiberLane'
 import { Ref } from './ReactFiberFlags'
 import { renderWithHooks } from './ReactFiberHooks/ReactFiberHooks'
-import { shallowEqual } from './shared/shallowEqual'
+import { shallowEqual } from '../shared/shallowEqual'
 import { mountChildFibers, reconcileChildFibers } from './ReactChildFiber'
-import { pushProvider } from './react-reconciler/ReactFiberNewContext'
+import { pushProvider } from './ReactFiberNewContext'
 
 function markRef(current, workInProgress) {
   if (workInProgress.ref === null) {

@@ -15,7 +15,7 @@ import {
 } from './ReactFiberFlags'
 import { HookHasEffect, HookLayout, HookPassive } from './ReactHookEffectFlags'
 import { appendAllChildren } from './ReactFiberCompleteWork'
-import { updateProperties } from './ReactDOMComponent'
+import { updateProperties } from '../react-dom-bindings/ReactDOMComponent'
 
 let hostParent = null
 
@@ -104,7 +104,7 @@ function commitDeletionEffects(returnFiber, deletedFiber) {
 
 function recursivelyTraverseMutationEffects(finishWork) {
   if (finishWork.deletions !== null) {
-    finishWork.deletions.forEach((fiber) => {
+    finishWork.deletions.forEach(fiber => {
       commitDeletionEffects(finishWork, fiber)
     })
   }
@@ -165,7 +165,7 @@ export function commitMutationEffectsOnFiber(finishWork) {
 function commitHookEffectListUnmount(finishWork, hookFlags) {
   const queue = finishWork.updateQueue
   if (queue !== null) {
-    queue.forEach((effect) => {
+    queue.forEach(effect => {
       if ((effect.tag & hookFlags) === hookFlags && effect.destroy) {
         const destroy = effect.destroy
         effect.destroy = null
@@ -230,7 +230,7 @@ function commitPassiveUnmountOnFiber(finishWork) {
 // 调用effect create方法，获取destroy
 function commitHookEffectListMount(finishWork, hookFlags) {
   const queue = finishWork.updateQueue
-  queue.forEach((effect) => {
+  queue.forEach(effect => {
     if ((effect.tag & hookFlags) === hookFlags) {
       effect.destroy = effect.create()
     }

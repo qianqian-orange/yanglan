@@ -6,10 +6,10 @@ import {
   HostText,
   MemoComponent,
 } from './ReactWorkTags'
-import { setInitialProperties } from './ReactDOMComponent'
+import { setInitialProperties } from '../react-dom-bindings/ReactDOMComponent'
 import { NoFlags, Update } from './ReactFiberFlags'
 import { NoLanes } from './ReactFiberLane'
-import { popProvider } from './react-reconciler/ReactFiberNewContext'
+import { popProvider } from './ReactFiberNewContext'
 
 export function appendAllChildren(el, workInProgress) {
   let nextChild = workInProgress.child

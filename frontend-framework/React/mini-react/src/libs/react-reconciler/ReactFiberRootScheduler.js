@@ -13,11 +13,11 @@ import {
   performWorkOnRoot,
   RenderContext,
 } from './ReactFiberWorkLoop'
-import { cancelCallback, scheduleCallback } from './scheduler/Scheduler'
+import { cancelCallback, scheduleCallback } from '../scheduler/Scheduler'
 import {
   ImmediatePriority,
   NormalPriority,
-} from './scheduler/SchedulerPriorities'
+} from '../scheduler/SchedulerPriorities'
 
 // 同步更新渲染是否完成
 let isFlushingWork = false

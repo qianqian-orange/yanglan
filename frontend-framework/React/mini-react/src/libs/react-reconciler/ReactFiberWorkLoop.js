@@ -20,7 +20,7 @@ import {
   ensureRootIsScheduled,
   flushSyncWorkAcrossRoots_impl,
 } from './ReactFiberRootScheduler'
-import { shouldYieldToHost } from './scheduler/Scheduler'
+import { shouldYieldToHost } from '../scheduler/Scheduler'
 
 export const NoContext = 0
 export const RenderContext = 2

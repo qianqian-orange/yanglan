@@ -7,7 +7,7 @@ import {
   HostText,
   MemoComponent,
 } from './ReactWorkTags'
-import { REACT_CONTEXT_TYPE, REACT_MEMO_TYPE } from './shared/ReactSymbol'
+import { REACT_CONTEXT_TYPE, REACT_MEMO_TYPE } from '../shared/ReactSymbol'
 
 function coerceRef(fiber, element) {
   const ref = element.props.ref

@@ -10,6 +10,7 @@ const config: webpack.Configuration & Configuration = {
   mode: 'development',
   devtool: 'inline-source-map',
   devServer: {
+    port: 8000,
     static: resolvePath('../dist'),
     open: true,
   },

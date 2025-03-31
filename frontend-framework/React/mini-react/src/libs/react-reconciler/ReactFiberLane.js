@@ -1,7 +1,7 @@
 import {
   syncLaneExpirationMs,
   transitionLaneExpirationMs,
-} from './ReactFeatureFlags'
+} from '../shared/ReactFeatureFlags'
 
 export const NoLanes = 0
 export const DefaultLane = /*                     */ 0b0000000000000000000000000100000 // 32

@@ -1,4 +1,4 @@
-import { readContext } from '../react-reconciler/ReactFiberNewContext'
+import { readContext } from '../ReactFiberNewContext'
 
 export function useContext(context) {
   return readContext(context)
