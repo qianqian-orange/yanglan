@@ -9,7 +9,7 @@ import {
 } from './ReactWorkTags'
 import { NoLanes } from './ReactFiberLane'
 import { Ref } from './ReactFiberFlags'
-import { renderWithHooks } from './ReactFiberHooks/ReactFiberHooks'
+import { renderWithHooks } from './ReactFiberHooks'
 import { shallowEqual } from '../shared/shallowEqual'
 import { mountChildFibers, reconcileChildFibers } from './ReactChildFiber'
 import { pushProvider } from './ReactFiberNewContext'

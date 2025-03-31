@@ -1,4 +1,4 @@
-import React, { createRoot, useState } from './libs'
+import React, { createRoot, renderToString, useState } from './libs'
 
 function HelloWorld() {
   return (
@@ -13,7 +13,13 @@ function App() {
 
   return (
     <div>
-      <h1 onClick={() => setCount(count + 1)}>{count}</h1>
+      <h1
+        className='helloworld'
+        style={{ color: 'red', fontSize: '16px' }}
+        onClick={() => setCount(count + 1)}
+      >
+        {count}
+      </h1>
       <HelloWorld />
     </div>
   )
@@ -21,3 +27,5 @@ function App() {
 
 const root = createRoot(document.getElementById('app'))
 root.render(<App />)
+
+console.log(renderToString(<App />))
