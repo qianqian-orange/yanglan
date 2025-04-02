@@ -1,4 +1,7 @@
-import { startWork, startFlowing } from '@/libs/react-server/ReactFizzServer'
+import {
+  startWork,
+  startFlowing,
+} from '../../../libs/react-server/ReactFizzServer'
 
 function renderToString(children) {
   const task = {
