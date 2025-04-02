@@ -7,9 +7,22 @@ import {
   MemoComponent,
 } from './ReactWorkTags'
 import { setInitialProperties } from '../react-dom-bindings/ReactDOMComponent'
-import { NoFlags, Update } from './ReactFiberFlags'
+import { NoFlags, Snapshot, Update } from './ReactFiberFlags'
 import { NoLanes } from './ReactFiberLane'
 import { popProvider } from './ReactFiberNewContext'
+import {
+  popHydrationState,
+  prepareToHydrateHostInstance,
+  prepareToHydrateHostTextInstance,
+} from './ReactFiberHydrationContext'
+import {
+  createInstance,
+  createTextInstance,
+} from '../react-dom-bindings/ReactFiberConfigDOM'
+
+function markUpdate(workInProgress) {
+  workInProgress.flags |= Update
+}
 
 export function appendAllChildren(el, workInProgress) {
   let nextChild = workInProgress.child
@@ -43,22 +56,35 @@ function completeWork(workInProgress) {
   const current = workInProgress.alternate
   switch (workInProgress.tag) {
     // HostRoot和FunctionComponent类型的FiberNode节点没有对应的DOM节点，没有构建DOM树逻辑，只需要收集子树FiberNode节点副作用即可
-    case HostRoot:
+    case HostRoot: {
+      if (current !== null && current.child === null) {
+        const wasHydrated = popHydrationState(workInProgress)
+        if (!wasHydrated) workInProgress.flags |= Snapshot
+      }
+      bubbleProperties(workInProgress)
+      return
+    }
     case FunctionComponent:
     case MemoComponent:
       bubbleProperties(workInProgress)
-      return null
+      return
     case HostComponent: {
       if (current !== null) {
         if (workInProgress.pendingProps) {
-          workInProgress.flags |= Update
+          markUpdate(workInProgress)
         }
         bubbleProperties(workInProgress)
-        return null
+        return
+      }
+      const wasHydrated = popHydrationState(workInProgress)
+      if (wasHydrated) {
+        prepareToHydrateHostInstance(workInProgress)
+        bubbleProperties(workInProgress)
+        return
       }
       // 创建DOM节点
       const { elementType, pendingProps } = workInProgress
-      const instance = document.createElement(elementType)
+      const instance = createInstance(elementType, pendingProps, workInProgress)
       // 将DOM节点赋值给FiberNode的stateNode属性
       workInProgress.stateNode = instance
       // 设置DOM节点属性
@@ -67,21 +93,26 @@ function completeWork(workInProgress) {
       appendAllChildren(instance, workInProgress)
       // 收集子树FiberNode节点副作用
       bubbleProperties(workInProgress)
-      return null
+      return
     }
     case HostText: {
       if (current !== null) {
-        if (workInProgress.pendingProps !== current.pendingProps) {
-          workInProgress.flags |= Update
-        }
+        if (workInProgress.pendingProps !== current.pendingProps)
+          markUpdate(workInProgress)
         bubbleProperties(workInProgress)
-        return null
+        return
+      }
+      const wasHydrated = popHydrationState(workInProgress)
+      if (wasHydrated) {
+        prepareToHydrateHostTextInstance(workInProgress)
+        bubbleProperties(workInProgress)
+        return
       }
       const { pendingProps } = workInProgress
-      const instance = document.createTextNode(pendingProps)
+      const instance = createTextInstance(pendingProps, workInProgress)
       workInProgress.stateNode = instance
       bubbleProperties(workInProgress)
-      return null
+      return
     }
     case ContextProvider:
       popProvider(workInProgress.elementType)

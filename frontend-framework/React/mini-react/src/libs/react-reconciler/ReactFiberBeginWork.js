@@ -13,6 +13,12 @@ import { renderWithHooks } from './ReactFiberHooks'
 import { shallowEqual } from '../shared/shallowEqual'
 import { mountChildFibers, reconcileChildFibers } from './ReactChildFiber'
 import { pushProvider } from './ReactFiberNewContext'
+import {
+  enterHydrationState,
+  resetHydrationState,
+  tryToClaimNextHydratableInstance,
+  tryToClaimNextHydratableTextInstance,
+} from './ReactFiberHydrationContext'
 
 function markRef(current, workInProgress) {
   if (workInProgress.ref === null) {
@@ -62,6 +68,16 @@ export function reconcileChildren(current, workInProgress, nextChildren) {
 }
 
 function updateHostRoot(current, workInProgress) {
+  if (workInProgress.memoizedState?.isDehydrated) {
+    workInProgress.memoizedState.isDehydrated = false
+    enterHydrationState(workInProgress)
+    const node = reconcileChildren(
+      null,
+      workInProgress,
+      workInProgress.memoizedState.element,
+    )
+    return node
+  }
   if (current.child !== null) {
     const newChild = createWorkInProgress(current.child, current.pendingProps)
     newChild.return = workInProgress
@@ -91,6 +107,7 @@ function updateFunctionComponent(
 }
 
 function updateHostComponent(current, workInProgress) {
+  if (current === null) tryToClaimNextHydratableInstance(workInProgress)
   let { children: nextChildren } = workInProgress.pendingProps
   // 判断nextChildren是否是纯文本，是则不需要创建FiberNode节点，将nextChildren赋值为null
   if (typeof nextChildren === 'string' || typeof nextChildren === 'number') {
@@ -99,6 +116,11 @@ function updateHostComponent(current, workInProgress) {
   markRef(current, workInProgress)
   // 创建child ReactElement对象对应的FiberNode节点
   return reconcileChildren(current, workInProgress, nextChildren)
+}
+
+function updateHostText(current, workInProgress) {
+  if (current === null) tryToClaimNextHydratableTextInstance(workInProgress)
+  return null
 }
 
 function updateMemoComponent(current, workInProgress, renderLanes) {
@@ -146,6 +168,11 @@ function beginWork(workInProgress, renderLanes) {
     current.pendingProps === workInProgress.pendingProps &&
     (workInProgress.lanes & renderLanes) === NoLanes
   ) {
+    switch (workInProgress.tag) {
+      case HostRoot:
+        resetHydrationState()
+        break
+    }
     return cloneChildFibers(current, workInProgress)
   }
   workInProgress.lanes = NoLanes
@@ -165,7 +192,7 @@ function beginWork(workInProgress, renderLanes) {
     case HostComponent:
       return updateHostComponent(current, workInProgress)
     case HostText:
-      return null
+      return updateHostText(current, workInProgress)
     case MemoComponent:
       return updateMemoComponent(current, workInProgress, renderLanes)
     case ContextProvider:

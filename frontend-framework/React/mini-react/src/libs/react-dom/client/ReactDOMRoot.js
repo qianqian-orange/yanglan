@@ -1,4 +1,8 @@
-import { DefaultLane } from '../../react-reconciler/ReactFiberLane'
+import { getFiberCurrentPropsFromNode } from '../../../libs/react-dom-bindings/ReactDOMComponentTree'
+import {
+  DefaultHydrationLane,
+  DefaultLane,
+} from '../../react-reconciler/ReactFiberLane'
 import FiberRootNode from '../../react-reconciler/ReactFiberRoot'
 import { scheduleUpdateOnFiber } from '../../react-reconciler/ReactFiberWorkLoop'
 
@@ -23,12 +27,29 @@ ReactDOMRoot.prototype.render = function (children) {
 /**
  * @param {*} element DOM节点
  */
-function createRoot(element) {
-  element.addEventListener('click', event => {
-    if (event.target.onClick) event.target.onClick()
+function createRoot(container) {
+  container.addEventListener('click', event => {
+    const props = getFiberCurrentPropsFromNode(event.target)
+    props?.onClick()
   })
-  const root = new FiberRootNode(element)
+  const root = new FiberRootNode(container)
   return new ReactDOMRoot(root)
 }
 
-export { createRoot }
+function hydrateRoot(container, initialChildren) {
+  container.addEventListener('click', event => {
+    const props = getFiberCurrentPropsFromNode(event.target)
+    props?.onClick()
+  })
+  const root = new FiberRootNode(container)
+  const { current } = root
+  current.memoizedState = {
+    element: initialChildren,
+    isDehydrated: true,
+  }
+  current.lanes = DefaultHydrationLane
+  scheduleUpdateOnFiber(root, DefaultHydrationLane)
+  return new ReactDOMRoot(root)
+}
+
+export { createRoot, hydrateRoot }

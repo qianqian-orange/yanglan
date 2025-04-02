@@ -4,12 +4,12 @@ import {
 } from '../shared/ReactFeatureFlags'
 
 export const NoLanes = 0
-export const DefaultLane = /*                     */ 0b0000000000000000000000000100000 // 32
 export const SyncLane = /*                        */ 0b0000000000000000000000000000010 // 2
 export const InputContinuousLane = /*             */ 0b0000000000000000000000000001000 // 8
+export const DefaultHydrationLane = /*            */ 0b0000000000000000000000000010000 // 16
+export const DefaultLane = /*                     */ 0b0000000000000000000000000100000 // 32
 export const IdleLane = /*                        */ 0b0010000000000000000000000000000
 export const InputContinuousHydrationLane = /*    */ 0b0000000000000000000000000000100
-export const DefaultHydrationLane = /*            */ 0b0000000000000000000000000010000
 export const DeferredLane = /*                    */ 0b1000000000000000000000000000000
 const NonIdleLanes = /*                           */ 0b0000111111111111111111111111111
 const TransitionLanes = /*                        */ 0b0000000001111111111111110000000
@@ -55,6 +55,8 @@ function getHighestPriorityLanes(lanes) {
   switch (lanes) {
     case DefaultLane:
       return DefaultLane
+    case DefaultHydrationLane:
+      return DefaultHydrationLane
     case TransitionLane1:
     case TransitionLane2:
     case TransitionLane3:

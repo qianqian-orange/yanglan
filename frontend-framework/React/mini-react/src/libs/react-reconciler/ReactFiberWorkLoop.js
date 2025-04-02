@@ -1,6 +1,7 @@
 import { createWorkInProgress } from './ReactFiber'
 import { beginWork } from './ReactFiberBeginWork'
 import {
+  commitBeforeMutationEffectsOnFiber,
   commitLayoutEffectOnFiber,
   commitMutationEffectsOnFiber,
   flushPassiveEffects,
@@ -162,6 +163,7 @@ function commitRoot(root) {
   const remainingLanes = finishWork.lanes | finishWork.childLanes
   markRootFinished(root, remainingLanes, workInProgressDeferredLane)
   executionContext = CommitContext
+  commitBeforeMutationEffectsOnFiber(finishWork)
   // 递归遍历FiberNode节点，执行对应副作用处理逻辑
   commitMutationEffectsOnFiber(finishWork)
   // 1. 调用useLayoutEffect create方法

@@ -11,11 +11,12 @@ import {
   PassiveMask,
   Placement,
   Ref,
+  Snapshot,
   Update,
 } from './ReactFiberFlags'
 import { HookHasEffect, HookLayout, HookPassive } from './ReactHookEffectFlags'
 import { appendAllChildren } from './ReactFiberCompleteWork'
-import { updateProperties } from '../react-dom-bindings/ReactDOMComponent'
+import { commitUpdate } from '../react-dom-bindings/ReactFiberConfigDOM'
 
 let hostParent = null
 
@@ -142,7 +143,7 @@ export function commitMutationEffectsOnFiber(finishWork) {
       // 更新DOM属性
       if (finishWork.flags & Update) {
         const { pendingProps, stateNode, alternate } = finishWork
-        updateProperties(stateNode, pendingProps, alternate.pendingProps)
+        commitUpdate(stateNode, alternate.pendingProps, pendingProps)
       }
       break
     }
@@ -313,3 +314,14 @@ export function commitLayoutEffectOnFiber(finishWork) {
   }
 }
 /***************************** useLayoutEffect / useRef end  *****************************/
+export function commitBeforeMutationEffectsOnFiber(finishWork) {
+  switch (finishWork.tag) {
+    case HostRoot: {
+      if (finishWork.flags & Snapshot) {
+        const root = finishWork.stateNode
+        root.containerInfo.textContent = ''
+      }
+      break
+    }
+  }
+}
