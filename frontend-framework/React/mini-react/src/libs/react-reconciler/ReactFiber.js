@@ -1,9 +1,10 @@
 import { NoFlags } from './ReactFiberFlags'
 import { NoLanes } from './ReactFiberLane'
+import { OffscreenComponent } from './ReactWorkTags'
 
-function FiberNode(tag, pendingProps) {
+function FiberNode(tag, pendingProps, key = null) {
   this.tag = tag // FiberNode节点类型
-  this.key = null // 对应ReactElement的key属性
+  this.key = key // 对应ReactElement的key属性
   this.elementType = null // 对应ReactElement的type属性
   this.return = null // 父FiberNode节点
   this.child = null // 子FiberNode节点
@@ -48,6 +49,16 @@ export function createWorkInProgress(current, pendingProps) {
   workInProgress.lanes = current.lanes
   workInProgress.childLanes = current.childLanes
   return workInProgress
+}
+
+export function createFiber(tag, pendingProps) {
+  return new FiberNode(tag, pendingProps)
+}
+
+export function createFiberFromOffscreen(pendingProps, lanes) {
+  const fiber = createFiber(OffscreenComponent, pendingProps)
+  fiber.lanes = lanes
+  return fiber
 }
 
 export default FiberNode

@@ -1,4 +1,4 @@
-import { getFiberCurrentPropsFromNode } from '../../../libs/react-dom-bindings/ReactDOMComponentTree'
+import { listenToAllSupportedEvents } from '../../react-dom-bindings/events/DOMPluginEventSystem'
 import {
   DefaultHydrationLane,
   DefaultLane,
@@ -28,19 +28,15 @@ ReactDOMRoot.prototype.render = function (children) {
  * @param {*} element DOM节点
  */
 function createRoot(container) {
-  container.addEventListener('click', event => {
-    const props = getFiberCurrentPropsFromNode(event.target)
-    props?.onClick()
-  })
+  // 初始化React事件机制
+  listenToAllSupportedEvents(container)
   const root = new FiberRootNode(container)
   return new ReactDOMRoot(root)
 }
 
 function hydrateRoot(container, initialChildren) {
-  container.addEventListener('click', event => {
-    const props = getFiberCurrentPropsFromNode(event.target)
-    props?.onClick()
-  })
+  // 初始化React事件机制
+  listenToAllSupportedEvents(container)
   const root = new FiberRootNode(container)
   const { current } = root
   current.memoizedState = {

@@ -1,7 +1,7 @@
-// 记录Context初始值
-const valueStack = []
-// 记录Context索引
+// 记录指示器索引
 let index = -1
+// 记录指示器value
+const valueStack = []
 
 export function createCursor(defaultValue) {
   return { current: defaultValue }

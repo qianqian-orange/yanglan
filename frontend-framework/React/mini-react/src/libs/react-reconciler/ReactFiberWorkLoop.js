@@ -17,10 +17,7 @@ import {
   NoLanes,
 } from './ReactFiberLane'
 import { PassiveMask } from './ReactFiberFlags'
-import {
-  ensureRootIsScheduled,
-  flushSyncWorkAcrossRoots_impl,
-} from './ReactFiberRootScheduler'
+import { ensureRootIsScheduled } from './ReactFiberRootScheduler'
 import { shouldYieldToHost } from '../scheduler/Scheduler'
 
 export const NoContext = 0
@@ -30,25 +27,22 @@ export const CommitContext = 4
 const RootInProgress = 0
 const RootCompleted = 5
 
-let executionContext = NoContext
+export let executionContext = NoContext
+// 记录当前FiberNode
 let workInProgress = null
-let workInProgressRoot = null
+// 记录当前FiberRootNode
+export let workInProgressRoot = null
 // 子树节点渲染优先级
-let entangledRenderLanes = NoLanes
+export let entangledRenderLanes = NoLanes
 // 当前任务渲染状态
 let workInProgressRootExitStatus = RootInProgress
 // FiberRootNode对象渲染优先级
-let workInProgressRootRenderLanes = NoLanes
+export let workInProgressRootRenderLanes = NoLanes
 // 延迟渲染优先级
 let workInProgressDeferredLane = NoLanes
 
-export function getExecutionContext() {
-  return executionContext
-}
-
-export function flushSyncWork() {
-  if ((executionContext & (RenderContext | CommitContext)) === NoContext)
-    flushSyncWorkAcrossRoots_impl()
+export function setEntangledRenderLanes(newEntangledRenderLanes) {
+  entangledRenderLanes = newEntangledRenderLanes
 }
 
 export function scheduleUpdateOnFiber(root, lanes) {
@@ -61,14 +55,6 @@ export function requestDeferredLane() {
     workInProgressDeferredLane = claimNextTransitionLane()
   }
   return workInProgressDeferredLane
-}
-
-export function getWorkInProgressRoot() {
-  return workInProgressRoot
-}
-
-export function getWorkInProgressRootRenderLanes() {
-  return workInProgressRootRenderLanes
 }
 
 /**

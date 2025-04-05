@@ -1,3 +1,4 @@
+// 处理style
 function setValueForStyles(node, styles, prevStyles) {
   const style = node.style
   for (const styleName in prevStyles) {

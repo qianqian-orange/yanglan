@@ -58,13 +58,17 @@
 
 Tailwind CSS提示插件
 
-### 1.6 Database Client
+### 1.6 EditorConfig for VS Code
 
-数据库可视化
+editor config
 
 ### 1.7 GitLens — Git supercharged
 
 git插件
+
+### 1.8 Database Client
+
+数据库可视化
 
 ## 2. [http-server](https://www.npmjs.com/package/http-server)
 

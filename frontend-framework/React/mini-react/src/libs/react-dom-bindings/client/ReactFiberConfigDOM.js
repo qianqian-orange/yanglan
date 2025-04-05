@@ -11,19 +11,23 @@ function getNextHydratable(node) {
   return node
 }
 
+// 获取当前hydrate dom节点第一个child节点
 export function getFirstHydratableChild(instance) {
   return getNextHydratable(instance.firstChild)
 }
 
+// 获取当前hydrate dom节点兄弟节点
 export function getNextHydratableSibling(instance) {
   return getNextHydratable(instance.nextSibling)
 }
 
+// 将FiberNode和props属性赋值给dom节点
 export function hydrateInstance(instance, props, internalInstanceHandle) {
   precacheFiberNode(instance, internalInstanceHandle)
   updateFiberProps(instance, props)
 }
 
+// 将props属性赋值给dom节点
 export function hydrateTextInstance(instance, internalInstanceHandle) {
   precacheFiberNode(instance, internalInstanceHandle)
 }

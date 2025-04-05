@@ -1,4 +1,4 @@
-import ReactDOMSharedInternals from '../shared/ReactDOMSharedInternals'
+import ReactDOMSharedInternals from '../../shared/ReactDOMSharedInternals'
 
 export function setCurrentUpdatePriority(newPriority) {
   ReactDOMSharedInternals.p = newPriority

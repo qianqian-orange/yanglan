@@ -6,12 +6,12 @@ import {
 } from './ReactFiberLane'
 import {
   CommitContext,
-  getExecutionContext,
-  getWorkInProgressRoot,
-  getWorkInProgressRootRenderLanes,
+  executionContext,
   NoContext,
   performWorkOnRoot,
   RenderContext,
+  workInProgressRoot,
+  workInProgressRootRenderLanes,
 } from './ReactFiberWorkLoop'
 import { cancelCallback, scheduleCallback } from '../scheduler/Scheduler'
 import {
@@ -37,8 +37,6 @@ export function flushSyncWorkAcrossRoots_impl() {
     didPerformSomeWork = false
     let root = firstScheduledRoot
     if (root !== null) {
-      const workInProgressRoot = getWorkInProgressRoot()
-      const workInProgressRootRenderLanes = getWorkInProgressRootRenderLanes()
       const nextLanes = getNextLanes(
         root,
         root === workInProgressRoot ? workInProgressRootRenderLanes : NoLanes,
@@ -55,8 +53,6 @@ export function flushSyncWorkAcrossRoots_impl() {
 // 异步更新渲染
 function performWorkOnRootViaSchedulerTask(root, didTimeout) {
   const originalCallbackNode = root.callbackNode
-  const workInProgressRoot = getWorkInProgressRoot()
-  const workInProgressRootRenderLanes = getWorkInProgressRootRenderLanes()
   const lanes = getNextLanes(
     root,
     root === workInProgressRoot ? workInProgressRootRenderLanes : NoLanes,
@@ -76,8 +72,6 @@ function performWorkOnRootViaSchedulerTask(root, didTimeout) {
 // 获取任务优先级，创建任务
 function scheduleTaskForRootDuringMicrotask(root) {
   markStarvedLanesAsExpired(root, performance.now())
-  const workInProgressRoot = getWorkInProgressRoot()
-  const workInProgressRootRenderLanes = getWorkInProgressRootRenderLanes()
   const nextLanes = getNextLanes(
     root,
     root === workInProgressRoot ? workInProgressRootRenderLanes : NoLanes,
@@ -113,6 +107,7 @@ function scheduleTaskForRootDuringMicrotask(root) {
   return nextLanes
 }
 
+// 添加React同步/异步渲染任务
 function processRootScheduleInMicrotask() {
   mightHavePendingSyncWork = false
   didScheduleMicrotask = false
@@ -126,13 +121,13 @@ function processRootScheduleInMicrotask() {
   flushSyncWorkAcrossRoots_impl()
 }
 
+// 确保完成React更新渲染
 export function ensureRootIsScheduled(root) {
   mightHavePendingSyncWork = true
   if (didScheduleMicrotask) return
   firstScheduledRoot = root
   didScheduleMicrotask = true
   queueMicrotask(() => {
-    const executionContext = getExecutionContext()
     if ((executionContext & (RenderContext | CommitContext)) === NoContext)
       processRootScheduleInMicrotask()
     else scheduleCallback(ImmediatePriority, processRootScheduleInMicrotask)

@@ -3,16 +3,17 @@ import {
   getNextHydratableSibling,
   hydrateInstance,
   hydrateTextInstance,
-} from '../react-dom-bindings/ReactFiberConfigDOM'
+} from '../react-dom-bindings/client/ReactFiberConfigDOM'
 import { HostComponent, HostRoot } from './ReactWorkTags'
 
 // 判断是否处于hydrate阶段
-let isHydrating = false
+export let isHydrating = false
 // 当前hydrate fiber节点
 let hydrationParentFiber = null
 // 当前hydrate dom节点
 let nextHydratableInstance = null
 
+// 处理根FiberNode hydrate逻辑
 export function enterHydrationState(fiber) {
   const parentInstance = fiber.stateNode.containerInfo
   nextHydratableInstance = getFirstHydratableChild(parentInstance)
@@ -20,6 +21,7 @@ export function enterHydrationState(fiber) {
   hydrationParentFiber = fiber
 }
 
+// 处理HostComponent类型FiberNode hydrate逻辑
 export function tryToClaimNextHydratableInstance(fiber) {
   if (!isHydrating) return
   if (nextHydratableInstance !== null) {
@@ -29,6 +31,7 @@ export function tryToClaimNextHydratableInstance(fiber) {
   }
 }
 
+// 处理HostText类型FiberNode hydrate逻辑
 export function tryToClaimNextHydratableTextInstance(fiber) {
   if (!isHydrating) return
   if (nextHydratableInstance !== null) {
@@ -38,6 +41,7 @@ export function tryToClaimNextHydratableTextInstance(fiber) {
   }
 }
 
+// 获取父FiberNode
 function popToNextHostParent(fiber) {
   hydrationParentFiber = fiber.return
   while (hydrationParentFiber) {
@@ -54,6 +58,7 @@ function popToNextHostParent(fiber) {
 export function popHydrationState(fiber) {
   if (!isHydrating) return false
   popToNextHostParent(fiber)
+  // 获取下一个hydrate dom节点
   nextHydratableInstance = hydrationParentFiber
     ? getNextHydratableSibling(fiber.stateNode)
     : null

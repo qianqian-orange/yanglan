@@ -1,5 +1,6 @@
 import { createCursor, pop, push } from './ReactFiberStack'
 
+// 记录Context value的指示器
 const valueCursor = createCursor()
 
 export function pushProvider(context, value) {
