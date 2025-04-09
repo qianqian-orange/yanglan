@@ -49,3 +49,19 @@ export function commitUpdate(domElement, oldProps, newProps) {
   updateProperties(domElement, newProps, oldProps)
   updateFiberProps(domElement, newProps)
 }
+
+export function hideInstance(instance) {
+  instance.style.display = 'none'
+}
+
+export function unhideInstance(instance) {
+  instance.style.display = ''
+}
+
+export function hideTextInstance(textInstance) {
+  textInstance.nodeValue = ''
+}
+
+export function unhideTextInstance(textInstance, text) {
+  textInstance.nodeValue = text
+}

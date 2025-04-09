@@ -4,6 +4,8 @@ import {
   HostRoot,
   HostText,
   MemoComponent,
+  OffscreenComponent,
+  SuspenseComponent,
 } from './ReactWorkTags'
 import {
   ChildDeletion,
@@ -13,70 +15,62 @@ import {
   Ref,
   Snapshot,
   Update,
+  Visibility,
 } from './ReactFiberFlags'
 import { HookHasEffect, HookLayout, HookPassive } from './ReactHookEffectFlags'
-import { appendAllChildren } from './ReactFiberCompleteWork'
-import { commitUpdate } from '../react-dom-bindings/ReactFiberConfigDOM'
+import { commitUpdate } from '../react-dom-bindings/client/ReactFiberConfigDOM'
+import { resolveRetryWakeable } from './ReactFiberWorkLoop'
+import {
+  commitHostPlacement,
+  commitShowHideHostInstance,
+  commitShowHideHostTextInstance,
+} from './ReactFiberCommitHostEffects'
+import {
+  commitHookEffectListMount,
+  commitHookEffectListUnmount,
+  safelyAttachRef,
+  safelyDetachRef,
+} from './ReactFiberCommitEffects'
 
 let hostParent = null
 
-function getHostParentFiber(finishWork) {
-  let parentFiber = finishWork.return
-  while (parentFiber !== null) {
-    if (parentFiber.tag === HostComponent || parentFiber.tag === HostRoot) {
-      break
-    }
-    parentFiber = parentFiber.return
+// 插入新节点
+function commitReconciliationEffects(finishedWork) {
+  if (finishedWork.flags & Placement) {
+    commitHostPlacement(finishedWork)
+    finishedWork.flags &= ~Placement
   }
-  return parentFiber
-}
-
-function commitHostPlacement(finishWork) {
-  const parentFiber = getHostParentFiber(finishWork)
-  let parentNode =
-    parentFiber.tag === HostComponent
-      ? parentFiber.stateNode
-      : parentFiber.stateNode.containerInfo
-  if (finishWork.tag === FunctionComponent) {
-    appendAllChildren(parentNode, finishWork)
-  } else {
-    parentNode.appendChild(finishWork.stateNode)
-  }
-}
-
-function commitReconciliationEffects(finishWork) {
-  if (finishWork.flags & Placement) commitHostPlacement(finishWork)
 }
 
 /*****************************  deletions start  *****************************/
-function recursivelyTraverseDeletionEffects(finishWork) {
-  let child = finishWork.child
+function recursivelyTraverseDeletionEffects(finishedWork) {
+  let child = finishedWork.child
   while (child !== null) {
     commitDeletionEffectsOnFiber(child)
     child = child.sibling
   }
 }
 
-function commitDeletionEffectsOnFiber(finishWork) {
-  switch (finishWork.tag) {
+function commitDeletionEffectsOnFiber(finishedWork) {
+  switch (finishedWork.tag) {
     case FunctionComponent:
-      commitHookEffectListUnmount(finishWork, HookLayout)
-      recursivelyTraverseDeletionEffects(finishWork)
+      commitHookEffectListUnmount(finishedWork, HookLayout)
+      recursivelyTraverseDeletionEffects(finishedWork)
       break
     case HostComponent: {
-      safelyDetachRef(finishWork)
+      safelyDetachRef(finishedWork)
       const prevHostParent = hostParent
       hostParent = null
-      recursivelyTraverseDeletionEffects(finishWork)
+      recursivelyTraverseDeletionEffects(finishedWork)
       hostParent = prevHostParent
-      if (hostParent !== null) hostParent.removeChild(finishWork.stateNode)
+      if (hostParent !== null) hostParent.removeChild(finishedWork.stateNode)
       break
     }
     case HostText:
-      if (hostParent !== null) hostParent.removeChild(finishWork.stateNode)
+      if (hostParent !== null) hostParent.removeChild(finishedWork.stateNode)
       break
     default:
-      recursivelyTraverseDeletionEffects(finishWork)
+      recursivelyTraverseDeletionEffects(finishedWork)
       break
   }
 }
@@ -93,25 +87,42 @@ function commitDeletionEffects(returnFiber, deletedFiber) {
         parentFiber = parentFiber.return
         break
       case HostComponent:
-        hostParent = returnFiber.stateNode
+        hostParent = parentFiber.stateNode
         break
     }
-    if (hostParent !== null) break
+    parentFiber = parentFiber.return
   }
   commitDeletionEffectsOnFiber(deletedFiber)
   hostParent = null
 }
 /*****************************  deletions end  *****************************/
+function getRetryCache(finishedWork) {
+  let retryCache = finishedWork.stateNode
+  if (retryCache === null) {
+    retryCache = finishedWork.stateNode = new WeakSet()
+  }
+  return retryCache
+}
 
-function recursivelyTraverseMutationEffects(finishWork) {
-  if (finishWork.deletions !== null) {
-    finishWork.deletions.forEach(fiber => {
-      commitDeletionEffects(finishWork, fiber)
+// 监听promise.then回调
+function attachSuspenseRetryListeners(finishedWork, wakeables) {
+  const retryCache = getRetryCache(finishedWork)
+  wakeables.forEach(wakeable => {
+    if (!retryCache.has(wakeable)) retryCache.add(wakeable)
+    const retry = resolveRetryWakeable.bind(null, finishedWork, wakeable)
+    wakeable.then(retry, retry)
+  })
+}
+
+function recursivelyTraverseMutationEffects(finishedWork) {
+  if (finishedWork.deletions !== null) {
+    finishedWork.deletions.forEach(fiber => {
+      commitDeletionEffects(finishedWork, fiber)
     })
   }
   // 为true说明子树FiberNode节点有副作用需要处理，递归遍历child FiberNode
-  if (finishWork.subtreeFlags & (Placement | Update | ChildDeletion)) {
-    let child = finishWork.child
+  if (finishedWork.subtreeFlags & (Placement | Update | ChildDeletion)) {
+    let child = finishedWork.child
     while (child !== null) {
       commitMutationEffectsOnFiber(child)
       child = child.sibling
@@ -119,68 +130,122 @@ function recursivelyTraverseMutationEffects(finishWork) {
   }
 }
 
-export function commitMutationEffectsOnFiber(finishWork) {
+function disappearLayoutEffects(finishedWork) {
+  switch (finishedWork.tag) {
+    case FunctionComponent:
+      commitHookEffectListUnmount(finishedWork, HookLayout)
+      recursivelyTraverseDisappearLayoutEffects(finishedWork)
+      break
+    case HostComponent:
+      safelyDetachRef(finishedWork)
+      recursivelyTraverseDisappearLayoutEffects(finishedWork)
+      break
+    default:
+      recursivelyTraverseDisappearLayoutEffects(finishedWork)
+  }
+}
+
+// 递归调用OffscreenComponent类型组件子树节点useLayoutEffect destroy方法
+function recursivelyTraverseDisappearLayoutEffects(parentFiber) {
+  let child = parentFiber.child
+  while (child !== null) {
+    disappearLayoutEffects(child)
+    child = child.sibling
+  }
+}
+
+function hideOrUnhideAllChildren(finishedWork, isHidden) {
+  let node = finishedWork
+  while (true) {
+    if (node.tag === HostComponent) {
+      commitShowHideHostInstance(node, isHidden)
+    } else if (node.tag === HostText) {
+      commitShowHideHostTextInstance(node, isHidden)
+    } else if (node.tag === OffscreenComponent) {
+      node.child.return = node
+      node = node.child
+      continue
+    } else if (node.child !== null) {
+      node.child.return = node
+      node = node.child
+      continue
+    }
+    while (node.sibling === null) {
+      if (node.return === finishedWork) return
+      node = node.return
+    }
+    node = node.sibling
+  }
+}
+
+export function commitMutationEffectsOnFiber(finishedWork) {
   // 采用深度优先遍历算法进行DOM更新
-  switch (finishWork.tag) {
+  switch (finishedWork.tag) {
     case HostRoot: {
-      recursivelyTraverseMutationEffects(finishWork)
+      recursivelyTraverseMutationEffects(finishedWork)
       break
     }
     case MemoComponent:
     case FunctionComponent: {
-      recursivelyTraverseMutationEffects(finishWork)
-      commitReconciliationEffects(finishWork)
-      if (finishWork.flags & Update) {
+      recursivelyTraverseMutationEffects(finishedWork)
+      commitReconciliationEffects(finishedWork)
+      if (finishedWork.flags & Update) {
         // 调用useLayoutEffect destroy方法
-        commitHookEffectListUnmount(finishWork, HookLayout | HookHasEffect)
+        commitHookEffectListUnmount(finishedWork, HookLayout | HookHasEffect)
       }
       break
     }
     case HostComponent: {
-      recursivelyTraverseMutationEffects(finishWork)
-      commitReconciliationEffects(finishWork)
-      if (finishWork.flags & Ref) safelyDetachRef(finishWork)
+      recursivelyTraverseMutationEffects(finishedWork)
+      commitReconciliationEffects(finishedWork)
+      if (finishedWork.flags & Ref) safelyDetachRef(finishedWork)
       // 更新DOM属性
-      if (finishWork.flags & Update) {
-        const { pendingProps, stateNode, alternate } = finishWork
+      if (finishedWork.flags & Update) {
+        const { pendingProps, stateNode, alternate } = finishedWork
         commitUpdate(stateNode, alternate.pendingProps, pendingProps)
       }
       break
     }
     case HostText: {
-      commitReconciliationEffects(finishWork)
+      commitReconciliationEffects(finishedWork)
       // 修改文本内容
-      if (finishWork.flags & Update) {
-        finishWork.stateNode.textContent = finishWork.pendingProps
-      }
+      if (finishedWork.flags & Update)
+        finishedWork.stateNode.textContent = finishedWork.pendingProps
       break
     }
+    case SuspenseComponent:
+      recursivelyTraverseMutationEffects(finishedWork)
+      if (finishedWork.flags & Update) {
+        const retryQueue = finishedWork.updateQueue
+        if (retryQueue !== null) {
+          finishedWork.updateQueue = null
+          // 添加promise实例then回调，回调逻辑是触发更细渲染
+          attachSuspenseRetryListeners(finishedWork, retryQueue)
+        }
+      }
+      break
+    case OffscreenComponent:
+      recursivelyTraverseMutationEffects(finishedWork)
+      if (finishedWork.flags & Visibility) {
+        const isHidden = finishedWork.pendingProps.mode === 'hidden'
+        if (isHidden) recursivelyTraverseDisappearLayoutEffects(finishedWork)
+        // 隐藏或显示子树节点
+        hideOrUnhideAllChildren(finishedWork, isHidden)
+      }
+      break
     default:
-      recursivelyTraverseMutationEffects(finishWork)
+      recursivelyTraverseMutationEffects(finishedWork)
+      commitReconciliationEffects(finishedWork)
       break
   }
 }
 
 /*****************************  useEffect destroy start  *****************************/
-// 调用effect destroy方法
-function commitHookEffectListUnmount(finishWork, hookFlags) {
-  const queue = finishWork.updateQueue
-  if (queue !== null) {
-    queue.forEach(effect => {
-      if ((effect.tag & hookFlags) === hookFlags && effect.destroy) {
-        const destroy = effect.destroy
-        effect.destroy = null
-        destroy()
-      }
-    })
-  }
-}
-
-function recursivelyTraversePassiveUnmountEffects(finishWork) {
-  if (finishWork.deletions !== null) {
+function recursivelyTraversePassiveUnmountEffects(finishedWork) {
+  if (finishedWork.deletions !== null) {
     // 采用深度优先遍历算法
-    for (let i = 0; i < finishWork.deletions.length; i++) {
-      let fiber = finishWork.deletions[i]
+    for (let i = 0; i < finishedWork.deletions.length; i++) {
+      let fiber = finishedWork.deletions[i]
       while (true) {
         let nextChild = fiber.child
         commitHookEffectListUnmount(fiber, HookPassive)
@@ -194,15 +259,15 @@ function recursivelyTraversePassiveUnmountEffects(finishWork) {
           fiber.sibling = null
           fiber = nextChild
         } else {
-          if (fiber === finishWork.deletions[i]) break
+          if (fiber === finishedWork.deletions[i]) break
           fiber = fiber.return
           fiber.child = null
         }
       }
     }
   }
-  if (finishWork.subtreeFlags & PassiveMask) {
-    let child = finishWork.child
+  if (finishedWork.subtreeFlags & PassiveMask) {
+    let child = finishedWork.child
     while (child !== null) {
       commitPassiveUnmountOnFiber(child)
       child = child.sibling
@@ -210,17 +275,18 @@ function recursivelyTraversePassiveUnmountEffects(finishWork) {
   }
 }
 
-function commitPassiveUnmountOnFiber(finishWork) {
-  switch (finishWork.tag) {
+export function commitPassiveUnmountOnFiber(finishedWork) {
+  switch (finishedWork.tag) {
     case FunctionComponent: {
-      recursivelyTraversePassiveUnmountEffects(finishWork)
-      if (finishWork.flags & Passive) {
-        commitHookEffectListUnmount(finishWork, HookPassive | HookHasEffect)
+      recursivelyTraversePassiveUnmountEffects(finishedWork)
+      if (finishedWork.flags & Passive) {
+        // 调用useEffect的destroy方法
+        commitHookEffectListUnmount(finishedWork, HookPassive | HookHasEffect)
       }
       break
     }
     default: {
-      recursivelyTraversePassiveUnmountEffects(finishWork)
+      recursivelyTraversePassiveUnmountEffects(finishedWork)
       break
     }
   }
@@ -228,19 +294,9 @@ function commitPassiveUnmountOnFiber(finishWork) {
 /*****************************  useEffect destroy end  *****************************/
 
 /*****************************  useEffect create start  *****************************/
-// 调用effect create方法，获取destroy
-function commitHookEffectListMount(finishWork, hookFlags) {
-  const queue = finishWork.updateQueue
-  queue.forEach(effect => {
-    if ((effect.tag & hookFlags) === hookFlags) {
-      effect.destroy = effect.create()
-    }
-  })
-}
-
-function recursivelyTraversePassiveMountEffects(finishWork) {
-  if (finishWork.subtreeFlags & Passive) {
-    let child = finishWork.child
+function recursivelyTraversePassiveMountEffects(finishedWork) {
+  if (finishedWork.subtreeFlags & Passive) {
+    let child = finishedWork.child
     while (child !== null) {
       commitPassiveMountOnFiber(child)
       child = child.sibling
@@ -248,43 +304,28 @@ function recursivelyTraversePassiveMountEffects(finishWork) {
   }
 }
 
-function commitPassiveMountOnFiber(finishWork) {
-  switch (finishWork.tag) {
+export function commitPassiveMountOnFiber(finishedWork) {
+  switch (finishedWork.tag) {
     case FunctionComponent: {
-      recursivelyTraversePassiveMountEffects(finishWork)
-      if (finishWork.flags & Passive) {
+      recursivelyTraversePassiveMountEffects(finishedWork)
+      if (finishedWork.flags & Passive) {
         // 调用useEffect的create方法
-        commitHookEffectListMount(finishWork, HookPassive | HookHasEffect)
+        commitHookEffectListMount(finishedWork, HookPassive | HookHasEffect)
       }
       break
     }
     default: {
-      recursivelyTraversePassiveMountEffects(finishWork)
+      recursivelyTraversePassiveMountEffects(finishedWork)
       break
     }
   }
 }
-
-export function flushPassiveEffects(root) {
-  commitPassiveUnmountOnFiber(root.current)
-  commitPassiveMountOnFiber(root.current)
-}
 /*****************************  useEffect create end  *****************************/
 
 /*****************************  useLayoutEffect / useRef start  *****************************/
-function safelyDetachRef(finishWork) {
-  if (finishWork !== null && finishWork.ref !== null)
-    finishWork.ref.current = null
-}
-
-function commitAttachRef(finishWork) {
-  const { ref, stateNode } = finishWork
-  if (ref !== null) ref.current = stateNode
-}
-
-function recursivelyTraverseLayoutEffects(finishWork) {
-  if (finishWork.subtreeFlags & (Ref | Update)) {
-    let child = finishWork.child
+function recursivelyTraverseLayoutEffects(finishedWork) {
+  if (finishedWork.subtreeFlags & (Ref | Update)) {
+    let child = finishedWork.child
     while (child !== null) {
       commitLayoutEffectOnFiber(child)
       child = child.sibling
@@ -292,33 +333,35 @@ function recursivelyTraverseLayoutEffects(finishWork) {
   }
 }
 
-export function commitLayoutEffectOnFiber(finishWork) {
-  switch (finishWork.tag) {
+export function commitLayoutEffectOnFiber(finishedWork) {
+  switch (finishedWork.tag) {
     case FunctionComponent: {
-      recursivelyTraverseLayoutEffects(finishWork)
-      if (finishWork.flags & Update) {
+      recursivelyTraverseLayoutEffects(finishedWork)
+      if (finishedWork.flags & Update) {
         // 调用useLayoutEffect的create方法
-        commitHookEffectListMount(finishWork, HookLayout | HookHasEffect)
+        commitHookEffectListMount(finishedWork, HookLayout | HookHasEffect)
       }
       break
     }
     case HostComponent: {
-      recursivelyTraverseLayoutEffects(finishWork)
-      if (finishWork.flags & Ref) commitAttachRef(finishWork)
+      recursivelyTraverseLayoutEffects(finishedWork)
+      if (finishedWork.flags & Ref) safelyAttachRef(finishedWork)
       break
     }
     default: {
-      recursivelyTraverseLayoutEffects(finishWork)
+      recursivelyTraverseLayoutEffects(finishedWork)
       break
     }
   }
 }
 /***************************** useLayoutEffect / useRef end  *****************************/
-export function commitBeforeMutationEffectsOnFiber(finishWork) {
-  switch (finishWork.tag) {
+
+export function commitBeforeMutationEffectsOnFiber(finishedWork) {
+  switch (finishedWork.tag) {
     case HostRoot: {
-      if (finishWork.flags & Snapshot) {
-        const root = finishWork.stateNode
+      // 清空挂载节点内容
+      if (finishedWork.flags & Snapshot) {
+        const root = finishedWork.stateNode
         root.containerInfo.textContent = ''
       }
       break

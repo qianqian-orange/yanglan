@@ -11,6 +11,7 @@ import {
   Update as UpdateEffect,
 } from './ReactFiberFlags'
 import ReactSharedInternals from '../shared/ReactSharedInternals'
+import { trackUsedThenable } from './ReactFiberThenable'
 
 // 渲染优先级
 let renderLanes = NoLanes
@@ -20,6 +21,11 @@ let currentlyRenderingFiber = null
 let currentHook = null
 // 记录新Hook对象
 let workInProgressHook = null
+
+// promise实例索引
+// let thenableIndexCounter = 0
+// 记录promise实例
+// let thenableState = null
 
 /**
  * @param {*} workInProgress 新FiberNode节点
@@ -50,7 +56,16 @@ export function renderWithHooks(
   currentHook = null
   workInProgressHook = null
   ReactSharedInternals.H = ContextOnlyDispatcher
+  // thenableIndexCounter = 0
+  // thenableState = null
   return children
+}
+
+export function resetHooksAfterThrow() {
+  currentlyRenderingFiber = null
+  ReactSharedInternals.H = ContextOnlyDispatcher
+  // thenableIndexCounter = 0
+  // thenableState = null
 }
 
 // 每次调用React Hook方法都会创建一个Hook对象，多个Hook对象之间通过next指针进行索引，构成单链表数据结构
@@ -413,6 +428,30 @@ function updateSyncExternalStore(subscribe, getSnapshot) {
   return hook.memoizedState[0]
 }
 
+// function useThenable(thenable) {
+//   const index = thenableIndexCounter
+//   thenableIndexCounter += 1
+//   if (thenableState === null) thenableState = createThenableState()
+//   const result = trackUsedThenable(thenableState, thenable, index)
+//   return result
+// }
+
+function useThenable(thenable) {
+  const result = trackUsedThenable(thenable)
+  return result
+}
+
+function use(usable) {
+  if (typeof usable === 'object' && usable !== null) {
+    // 判断是否是promsie实例
+    if (typeof usable.then === 'function') {
+      return useThenable(usable)
+    } else {
+      return readContext(usable)
+    }
+  }
+}
+
 const HooksDispatcherOnMount = {
   useState: mountState,
   useReducer: mountReducer,
@@ -425,6 +464,7 @@ const HooksDispatcherOnMount = {
   useContext: readContext,
   useDeferredValue: mountDeferredValue,
   useSyncExternalStore: mountSyncExternalStore,
+  use,
 }
 
 const HooksDispatcherOnUpdate = {
@@ -439,6 +479,7 @@ const HooksDispatcherOnUpdate = {
   useContext: readContext,
   useDeferredValue: updateDeferredValue,
   useSyncExternalStore: updateSyncExternalStore,
+  use,
 }
 
 function throwInvalidHookError() {

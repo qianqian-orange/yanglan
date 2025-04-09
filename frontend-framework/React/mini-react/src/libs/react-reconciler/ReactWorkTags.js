@@ -11,7 +11,9 @@ export const MemoComponent = 14
 export const SimpleMemoComponent = 15
 // Provider组件
 export const ContextProvider = 10
-// Suspense组件
+// Suspense组件类型FiberNode
 export const SuspenseComponent = 13
 
 export const OffscreenComponent = 22
+// Fragment组件
+export const Fragment = 7

@@ -59,3 +59,8 @@ export function useSyncExternalStore(subscribe, getSnapshot) {
   const dispatcher = resolveDispatcher()
   return dispatcher.useSyncExternalStore(subscribe, getSnapshot)
 }
+
+export function use(usable) {
+  const dispatcher = resolveDispatcher()
+  return dispatcher.use(usable)
+}

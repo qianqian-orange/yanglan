@@ -1,14 +1,27 @@
-import { createWorkInProgress } from './ReactFiber'
+import {
+  createFiberFromFragment,
+  createFiberFromOffscreen,
+  createWorkInProgress,
+} from './ReactFiber'
 import {
   ContextProvider,
+  Fragment,
   FunctionComponent,
   HostComponent,
   HostRoot,
   HostText,
   MemoComponent,
+  OffscreenComponent,
+  SuspenseComponent,
 } from './ReactWorkTags'
 import { NoLanes } from './ReactFiberLane'
-import { Ref } from './ReactFiberFlags'
+import {
+  ChildDeletion,
+  DidCapture,
+  NoFlags,
+  Placement,
+  Ref,
+} from './ReactFiberFlags'
 import { renderWithHooks } from './ReactFiberHooks'
 import { shallowEqual } from '../shared/shallowEqual'
 import { mountChildFibers, reconcileChildFibers } from './ReactChildFiber'
@@ -19,6 +32,10 @@ import {
   tryToClaimNextHydratableInstance,
   tryToClaimNextHydratableTextInstance,
 } from './ReactFiberHydrationContext'
+import {
+  pushFallbackTreeSuspenseHandler,
+  pushPrimaryTreeSuspenseHandler,
+} from './ReactFiberSuspenseContext'
 
 function markRef(current, workInProgress) {
   if (workInProgress.ref === null) {
@@ -71,12 +88,11 @@ function updateHostRoot(current, workInProgress) {
   if (workInProgress.memoizedState?.isDehydrated) {
     workInProgress.memoizedState.isDehydrated = false
     enterHydrationState(workInProgress)
-    const node = reconcileChildren(
+    return reconcileChildren(
       null,
       workInProgress,
       workInProgress.memoizedState.element,
     )
-    return node
   }
   if (current.child !== null) {
     const newChild = createWorkInProgress(current.child, current.pendingProps)
@@ -153,8 +169,150 @@ function updateContextProvider(current, workInProgress) {
   const newValue = newProps.value
   pushProvider(context, newValue)
   const newChildren = newProps.children
-  reconcileChildren(current, workInProgress, newChildren)
-  return workInProgress.child
+  return reconcileChildren(current, workInProgress, newChildren)
+}
+
+function mountSuspenseFallbackChildren(
+  workInProgress,
+  primaryChildren,
+  fallbackChildren,
+) {
+  const primaryChildProps = {
+    mode: 'hidden',
+    children: primaryChildren,
+  }
+  const primaryChildFragment = createFiberFromOffscreen(primaryChildProps)
+  const fallbackChildFragment = createFiberFromFragment(fallbackChildren)
+  primaryChildFragment.return = workInProgress
+  fallbackChildFragment.return = workInProgress
+  primaryChildFragment.sibling = fallbackChildFragment
+  workInProgress.child = primaryChildFragment
+  return fallbackChildFragment
+}
+
+function mountSuspensePrimaryChildren(workInProgress, primaryChildren) {
+  const primaryChildProps = {
+    mode: 'visible',
+    children: primaryChildren,
+  }
+  const primaryChildFragment = createFiberFromOffscreen(primaryChildProps)
+  primaryChildFragment.return = workInProgress
+  workInProgress.child = primaryChildFragment
+  return primaryChildFragment
+}
+
+function updateSuspenseFallbackChildren(
+  current,
+  workInProgress,
+  primaryChildren,
+  fallbackChildren,
+) {
+  const currentPrimaryChildFragment = current.child
+  const currentFallbackChildFragment = currentPrimaryChildFragment.sibling
+  const primaryChildProps = {
+    mode: 'hidden',
+    children: primaryChildren,
+  }
+  const primaryChildFragment = createWorkInProgress(
+    currentPrimaryChildFragment,
+    primaryChildProps,
+  )
+  let fallbackChildFragment
+  if (currentFallbackChildFragment !== null) {
+    fallbackChildFragment = createWorkInProgress(
+      currentFallbackChildFragment,
+      fallbackChildren,
+    )
+  } else {
+    fallbackChildFragment = createFiberFromFragment(fallbackChildren)
+    fallbackChildFragment.flags |= Placement
+  }
+  primaryChildFragment.return = workInProgress
+  fallbackChildFragment.return = workInProgress
+  primaryChildFragment.sibling = fallbackChildFragment
+  workInProgress.child = primaryChildFragment
+  return fallbackChildFragment
+}
+
+function updateSuspensePrimaryChildren(
+  current,
+  workInProgress,
+  primaryChildren,
+) {
+  const currentPrimaryChildFragment = current.child
+  const currentFallbackChildFragment = currentPrimaryChildFragment.sibling
+  const primaryChildFragment = createWorkInProgress(
+    currentPrimaryChildFragment,
+    {
+      mode: 'visible',
+      children: primaryChildren,
+    },
+  )
+  primaryChildFragment.return = workInProgress
+  primaryChildFragment.sibling = null
+  workInProgress.child = primaryChildFragment
+  if (currentFallbackChildFragment !== null) {
+    const deletions = workInProgress.deletions
+    if (deletions === null) {
+      workInProgress.deletions = [currentFallbackChildFragment]
+      workInProgress.flags |= ChildDeletion
+    } else deletions.push(currentFallbackChildFragment)
+  }
+  return primaryChildFragment
+}
+
+function updateSuspenseComponent(current, workInProgress) {
+  const nextProps = workInProgress.pendingProps
+  // 是否展示fallback组件
+  let showFallback = false
+  const didSuspend = (workInProgress.flags & DidCapture) !== NoFlags
+  if (didSuspend) {
+    showFallback = true
+    workInProgress.flags &= ~DidCapture
+  }
+  const nextFallbackChildren = nextProps.fallback
+  const nextPrimaryChildren = nextProps.children
+  if (current === null) {
+    if (showFallback) {
+      pushFallbackTreeSuspenseHandler(workInProgress)
+      const fallbackFragment = mountSuspenseFallbackChildren(
+        workInProgress,
+        nextPrimaryChildren,
+        nextFallbackChildren,
+      )
+      return fallbackFragment
+    } else {
+      pushPrimaryTreeSuspenseHandler(workInProgress)
+      return mountSuspensePrimaryChildren(workInProgress, nextPrimaryChildren)
+    }
+  }
+  if (showFallback) {
+    pushFallbackTreeSuspenseHandler(workInProgress)
+    return updateSuspenseFallbackChildren(
+      current,
+      workInProgress,
+      nextPrimaryChildren,
+      nextFallbackChildren,
+    )
+  } else {
+    pushPrimaryTreeSuspenseHandler(workInProgress)
+    return updateSuspensePrimaryChildren(
+      current,
+      workInProgress,
+      nextPrimaryChildren,
+    )
+  }
+}
+
+function updateOffscreenComponent(current, workInProgress) {
+  const nextProps = workInProgress.pendingProps
+  const nextChildren = nextProps.children
+  return reconcileChildren(current, workInProgress, nextChildren)
+}
+
+function updateFragment(current, workInProgress) {
+  const nextChildren = workInProgress.pendingProps
+  return reconcileChildren(current, workInProgress, nextChildren)
 }
 
 /**
@@ -197,6 +355,12 @@ function beginWork(workInProgress, renderLanes) {
       return updateMemoComponent(current, workInProgress, renderLanes)
     case ContextProvider:
       return updateContextProvider(current, workInProgress, renderLanes)
+    case SuspenseComponent:
+      return updateSuspenseComponent(current, workInProgress, renderLanes)
+    case OffscreenComponent:
+      return updateOffscreenComponent(current, workInProgress, renderLanes)
+    case Fragment:
+      return updateFragment(current, workInProgress, renderLanes)
   }
 }
 

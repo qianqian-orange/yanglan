@@ -4,10 +4,12 @@ import {
   commitBeforeMutationEffectsOnFiber,
   commitLayoutEffectOnFiber,
   commitMutationEffectsOnFiber,
-  flushPassiveEffects,
+  commitPassiveMountOnFiber,
+  commitPassiveUnmountOnFiber,
 } from './ReactFiberCommitWork'
 import { completeWork } from './ReactFiberCompleteWork'
 import {
+  claimNextRetryLane,
   claimNextTransitionLane,
   getEntangledLanes,
   includesBlockingLane,
@@ -16,16 +18,34 @@ import {
   markRootUpdated,
   NoLanes,
 } from './ReactFiberLane'
-import { PassiveMask } from './ReactFiberFlags'
+import {
+  // Incomplete,
+  // NoFlags,
+  PassiveMask,
+  // ScheduleRetry,
+} from './ReactFiberFlags'
 import { ensureRootIsScheduled } from './ReactFiberRootScheduler'
 import { shouldYieldToHost } from '../scheduler/Scheduler'
+import { getSuspendedThenable, SuspenseException } from './ReactFiberThenable'
+import { resetHooksAfterThrow } from './ReactFiberHooks'
+import { unwindWork } from './ReactFiberUnwindWork'
+import { throwException } from './ReactFiberThrow'
+import { enqueueConcurrentRenderForLane } from './ReactFiberConcurrentUpdates'
+// import { suspenseHandlerStackCursor } from './ReactFiberSuspenseContext'
+// import { SuspenseComponent } from './ReactWorkTags'
 
 export const NoContext = 0
 export const RenderContext = 2
 export const CommitContext = 4
 
+// 当前渲染状态
 const RootInProgress = 0
+const RootSuspended = 3
 const RootCompleted = 5
+
+// 当前FiberNode中断渲染状态
+const NotSuspended = 0
+const SuspendedOnImmediate = 3
 
 export let executionContext = NoContext
 // 记录当前FiberNode
@@ -40,6 +60,10 @@ let workInProgressRootExitStatus = RootInProgress
 export let workInProgressRootRenderLanes = NoLanes
 // 延迟渲染优先级
 let workInProgressDeferredLane = NoLanes
+// 记录FiberNode中断渲染状态
+let workInProgressSuspendedReason = NotSuspended
+// 记录FiberNode终止渲染原因或promise实例
+let workInProgressThrownValue = null
 
 export function setEntangledRenderLanes(newEntangledRenderLanes) {
   entangledRenderLanes = newEntangledRenderLanes
@@ -50,11 +74,44 @@ export function scheduleUpdateOnFiber(root, lanes) {
   ensureRootIsScheduled(root)
 }
 
+export function renderDidSuspend() {
+  if (workInProgressRootExitStatus === RootInProgress)
+    workInProgressRootExitStatus = RootSuspended
+}
+
 export function requestDeferredLane() {
   if (workInProgressDeferredLane === NoLanes) {
     workInProgressDeferredLane = claimNextTransitionLane()
   }
   return workInProgressDeferredLane
+}
+
+export function resolveRetryWakeable(boundaryFiber, wakeable) {
+  const retryCache = boundaryFiber.stateNode
+  if (retryCache !== null) retryCache.delete(wakeable)
+  const retryLane = claimNextRetryLane()
+  const root = enqueueConcurrentRenderForLane(boundaryFiber, retryLane)
+  // 触发更新渲染
+  scheduleUpdateOnFiber(root, retryLane)
+}
+
+// 修改Suspense组件类型FiberNode子树状态并返回Suspense组件类型FiberNode
+function unwindUnitOfWork(unitOfWork) {
+  do {
+    const current = unitOfWork.alternate
+    const next = unwindWork(current, unitOfWork, entangledRenderLanes)
+    if (next !== null) {
+      workInProgress = next
+      return
+    }
+    const returnFiber = unitOfWork.return
+    if (returnFiber !== null) {
+      // returnFiber.flags |= Incomplete
+      // returnFiber.subtreeFlags = NoFlags
+      // returnFiber.deletions = null
+    }
+    workInProgress = unitOfWork = returnFiber
+  } while (unitOfWork !== null)
 }
 
 /**
@@ -102,6 +159,36 @@ function prepareFreshStack(root, lanes) {
   entangledRenderLanes = getEntangledLanes(root, lanes)
 }
 
+function throwAndUnwindWorkLoop(unitOfWork, thrownValue, suspendedReason) {
+  // 将Suspense组件类型FiberNode的flags赋值为ShouldCapture且promise实例赋值给FiberNode的updateQueue属性
+  throwException(unitOfWork, thrownValue)
+  if (suspendedReason === SuspendedOnImmediate) {
+    //   const boundary = suspenseHandlerStackCursor.current
+    //   if (boundary !== null && boundary.tag === SuspenseComponent)
+    //     boundary.flags |= ScheduleRetry
+  }
+  // 将Suspense组件类型FiberNode赋值给workInProgress且将flags赋值为DidCapture
+  unwindUnitOfWork(unitOfWork)
+}
+
+function handleThrow(thrownValue) {
+  resetHooksAfterThrow()
+  if (thrownValue === SuspenseException) {
+    // 获取promise实例
+    thrownValue = getSuspendedThenable()
+    // 记录FiberNode中断渲染状态
+    workInProgressSuspendedReason = SuspendedOnImmediate
+  }
+  workInProgressThrownValue = thrownValue
+}
+
+function flushPassiveEffects(root) {
+  // 调用useEffect destroy方法
+  commitPassiveUnmountOnFiber(root.current)
+  // 调用useEffect create方法
+  commitPassiveMountOnFiber(root.current)
+}
+
 // 1. 创建根FiberNode副本节点，赋值给workInProgress
 // 2. 递归遍历wokrInProgress节点
 /**
@@ -112,10 +199,33 @@ function renderRootSync(root, lanes) {
   // 如果workInProgressRoot和workInProgressRootRenderLanes和本次渲染的root和lanes相同，说明是执行同一个任务
   if (root !== workInProgressRoot || lanes !== workInProgressRootRenderLanes)
     prepareFreshStack(root, lanes)
-  // 递归遍历FiberNode节点，创建ReactElement对应的FiberNode节点，建立关联关系，构建FiberNode Tree
-  while (workInProgress !== null) {
-    performUnitOfWork(workInProgress)
-  }
+  do {
+    try {
+      if (
+        workInProgressSuspendedReason !== NotSuspended &&
+        workInProgress !== null
+      ) {
+        const unitOfWork = workInProgress
+        const thrownValue = workInProgressThrownValue
+        switch (workInProgressSuspendedReason) {
+          case SuspendedOnImmediate: {
+            const reason = workInProgressSuspendedReason
+            workInProgressSuspendedReason = NotSuspended
+            workInProgressThrownValue = null
+            throwAndUnwindWorkLoop(unitOfWork, thrownValue, reason)
+            break
+          }
+        }
+      }
+      // 递归遍历FiberNode节点，创建ReactElement对应的FiberNode节点，建立关联关系，构建FiberNode Tree
+      while (workInProgress !== null) {
+        performUnitOfWork(workInProgress)
+      }
+      break
+    } catch (thrownValue) {
+      handleThrow(thrownValue)
+    }
+  } while (true)
   executionContext = NoContext
   if (workInProgress === null) {
     workInProgressRoot = null
@@ -143,22 +253,22 @@ function renderRootConcurrent(root, lanes) {
  * @param {*} root FiberRootNode
  */
 function commitRoot(root) {
-  const finishWork = root.current.alternate
+  const finishedhWork = root.current.alternate
   root.callbackNode = null
   root.callbackPriority = NoLanes
-  const remainingLanes = finishWork.lanes | finishWork.childLanes
+  const remainingLanes = finishedhWork.lanes | finishedhWork.childLanes
   markRootFinished(root, remainingLanes, workInProgressDeferredLane)
+  commitBeforeMutationEffectsOnFiber(finishedhWork)
   executionContext = CommitContext
-  commitBeforeMutationEffectsOnFiber(finishWork)
   // 递归遍历FiberNode节点，执行对应副作用处理逻辑
-  commitMutationEffectsOnFiber(finishWork)
+  commitMutationEffectsOnFiber(finishedhWork)
   // 1. 调用useLayoutEffect create方法
   // 2. 将DOM节点赋值给ref.current属性
-  commitLayoutEffectOnFiber(finishWork)
+  commitLayoutEffectOnFiber(finishedhWork)
   // 将FiberRootNode对象current属性指向最新的FiiberNode Tree根节点
-  root.current = finishWork
+  root.current = finishedhWork
   executionContext = NoContext
-  if (finishWork.subtreeFlags & PassiveMask) {
+  if (finishedhWork.subtreeFlags & PassiveMask) {
     // 执行useEffect
     queueMicrotask(() => {
       flushPassiveEffects(root)
@@ -179,7 +289,7 @@ function performWorkOnRoot(root, lanes, forceSync) {
   // 构建FiberNode Tree和DOM树
   if (shouldTimeSlice) renderRootConcurrent(root, lanes)
   else renderRootSync(root, lanes)
-  if (workInProgressRootExitStatus === RootCompleted) {
+  if (workInProgressRootExitStatus !== RootInProgress) {
     // 更新DOM
     commitRoot(root)
   }

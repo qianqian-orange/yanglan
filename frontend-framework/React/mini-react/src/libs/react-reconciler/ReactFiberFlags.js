@@ -13,6 +13,17 @@ export const Ref = /*                              */ 0b000000000000000000100000
 // 表示需要清空根FiberNode节点对应的dom节点内容
 export const Snapshot = /*                         */ 0b0000000000000000000010000000000 // 1024
 
+export const Visibility = /*                       */ 0b0000000000000000010000000000000 // 8192
+// 判断Suspense组件是否要展示fallback组件
+export const DidCapture = /*                       */ 0b0000000000000000000000010000000 // 128
 export const Hydrating = /*                        */ 0b0000000000000000001000000000000 // 4096
 
+export const Incomplete = /*                       */ 0b0000000000000001000000000000000 // 32768
+export const ShouldCapture = /*                    */ 0b0000000000000010000000000000000 // 65536
+
+export const StoreConsistency = /*                 */ 0b0000000000000000100000000000000 // 16384
+export const ScheduleRetry = StoreConsistency
+
 export const PassiveMask = Passive | ChildDeletion
+
+export const HostEffectMask = /*                   */ 0b0000000000000000111111111111111 // 32767

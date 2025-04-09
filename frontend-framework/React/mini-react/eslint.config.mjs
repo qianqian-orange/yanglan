@@ -24,6 +24,7 @@ export default [
       quotes: ['error', 'single'],
       'jsx-quotes': ['error', 'prefer-single'],
       'comma-dangle': ['error', 'always-multiline'],
+      'no-constant-condition': 'off',
     },
   },
 ]

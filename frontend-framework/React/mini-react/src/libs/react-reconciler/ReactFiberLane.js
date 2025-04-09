@@ -8,29 +8,35 @@ export const SyncLane = /*                        */ 0b0000000000000000000000000
 export const InputContinuousLane = /*             */ 0b0000000000000000000000000001000 // 8
 export const DefaultHydrationLane = /*            */ 0b0000000000000000000000000010000 // 16
 export const DefaultLane = /*                     */ 0b0000000000000000000000000100000 // 32
-export const IdleLane = /*                        */ 0b0010000000000000000000000000000
-export const InputContinuousHydrationLane = /*    */ 0b0000000000000000000000000000100
-export const DeferredLane = /*                    */ 0b1000000000000000000000000000000
-const NonIdleLanes = /*                           */ 0b0000111111111111111111111111111
-const TransitionLanes = /*                        */ 0b0000000001111111111111110000000
+export const IdleLane = /*                        */ 0b0010000000000000000000000000000 // 268435456
+export const InputContinuousHydrationLane = /*    */ 0b0000000000000000000000000000100 // 4
+export const DeferredLane = /*                    */ 0b1000000000000000000000000000000 // 1073741824
+const NonIdleLanes = /*                           */ 0b0000111111111111111111111111111 // 134217727
+const TransitionLanes = /*                        */ 0b0000000001111111111111110000000 // 4194176
 const TransitionLane1 = /*                        */ 0b0000000000000000000000010000000 // 128
-const TransitionLane2 = /*                        */ 0b0000000000000000000000100000000
-const TransitionLane3 = /*                        */ 0b0000000000000000000001000000000
-const TransitionLane4 = /*                        */ 0b0000000000000000000010000000000
-const TransitionLane5 = /*                        */ 0b0000000000000000000100000000000
-const TransitionLane6 = /*                        */ 0b0000000000000000001000000000000
-const TransitionLane7 = /*                        */ 0b0000000000000000010000000000000
-const TransitionLane8 = /*                        */ 0b0000000000000000100000000000000
-const TransitionLane9 = /*                        */ 0b0000000000000001000000000000000
-const TransitionLane10 = /*                       */ 0b0000000000000010000000000000000
-const TransitionLane11 = /*                       */ 0b0000000000000100000000000000000
-const TransitionLane12 = /*                       */ 0b0000000000001000000000000000000
-const TransitionLane13 = /*                       */ 0b0000000000010000000000000000000
-const TransitionLane14 = /*                       */ 0b0000000000100000000000000000000
-const TransitionLane15 = /*                       */ 0b0000000001000000000000000000000
-const RetryLanes = /*                             */ 0b0000011110000000000000000000000
+const TransitionLane2 = /*                        */ 0b0000000000000000000000100000000 // 256
+const TransitionLane3 = /*                        */ 0b0000000000000000000001000000000 // 512
+const TransitionLane4 = /*                        */ 0b0000000000000000000010000000000 // 1024
+const TransitionLane5 = /*                        */ 0b0000000000000000000100000000000 // 2048
+const TransitionLane6 = /*                        */ 0b0000000000000000001000000000000 // 4096
+const TransitionLane7 = /*                        */ 0b0000000000000000010000000000000 // 8192
+const TransitionLane8 = /*                        */ 0b0000000000000000100000000000000 // 16384
+const TransitionLane9 = /*                        */ 0b0000000000000001000000000000000 // 32768
+const TransitionLane10 = /*                       */ 0b0000000000000010000000000000000 // 65536
+const TransitionLane11 = /*                       */ 0b0000000000000100000000000000000 // 131072
+const TransitionLane12 = /*                       */ 0b0000000000001000000000000000000 // 262144
+const TransitionLane13 = /*                       */ 0b0000000000010000000000000000000 // 524288
+const TransitionLane14 = /*                       */ 0b0000000000100000000000000000000 // 1048576
+const TransitionLane15 = /*                       */ 0b0000000001000000000000000000000 // 2097152
+
+const RetryLanes = /*                             */ 0b0000011110000000000000000000000 // 62914560
+const RetryLane1 = /*                             */ 0b0000000010000000000000000000000 // 4194304
+const RetryLane2 = /*                             */ 0b0000000100000000000000000000000 // 8388608
+const RetryLane3 = /*                             */ 0b0000001000000000000000000000000 // 16777216
+const RetryLane4 = /*                             */ 0b0000010000000000000000000000000 // 33554432
 
 let nextTransitionLane = TransitionLane1
+let nextRetryLane = RetryLane1
 
 export const SyncUpdateLanes = SyncLane | InputContinuousLane | DefaultLane
 
@@ -73,6 +79,11 @@ function getHighestPriorityLanes(lanes) {
     case TransitionLane14:
     case TransitionLane15:
       return lanes & TransitionLanes
+    case RetryLane1:
+    case RetryLane2:
+    case RetryLane3:
+    case RetryLane4:
+      return lanes & RetryLanes
   }
 }
 
@@ -97,9 +108,15 @@ export function markRootUpdated(root, updateLane) {
 export function claimNextTransitionLane() {
   const lane = nextTransitionLane
   nextTransitionLane <<= 1
-  if ((nextTransitionLane & TransitionLanes) === NoLanes) {
+  if ((nextTransitionLane & TransitionLanes) === NoLanes)
     nextTransitionLane = TransitionLane1
-  }
+  return lane
+}
+
+export function claimNextRetryLane() {
+  const lane = nextRetryLane
+  nextRetryLane <<= 1
+  if ((nextRetryLane & RetryLanes) === NoLanes) nextRetryLane = RetryLane1
   return lane
 }
 
@@ -171,7 +188,7 @@ function markSpawnedDeferredLane(root, spawnedLane) {
 
 /**
  * @param {*} root FiberRootNode对象
- * @param {*} remainingLanes 在下次更新渲染优先级
+ * @param {*} remainingLanes 下次更新渲染优先级
  * @param {*} spawnedLane workInProgressDeferredLane
  */
 export function markRootFinished(root, remainingLanes, spawnedLane) {
