@@ -1,7 +1,7 @@
 import {
   startWork,
   startFlowing,
-} from '../../../libs/react-server/ReactFizzServer'
+} from '../../react-server/ReactLegacyFizzServer'
 
 function renderToString(children) {
   const task = {

@@ -2,7 +2,7 @@ const path = require('path')
 const webpack = require('webpack')
 const webpackDevServer = require('webpack-dev-server')
 const React = require('./libs').default
-const { renderToString } = require('./libs')
+const { renderToString } = require('./libs/react-dom/server')
 const config = require('../configs/webpack.dev')
 const App = require('./App').default
 
