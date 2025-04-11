@@ -40,11 +40,13 @@ export const CommitContext = 4
 
 // 当前渲染状态
 const RootInProgress = 0
+const RootErrored = 2
 const RootSuspended = 3
 const RootCompleted = 5
 
 // 当前FiberNode中断渲染状态
 const NotSuspended = 0
+const SuspendedOnError = 1
 const SuspendedOnImmediate = 3
 
 export let executionContext = NoContext
@@ -178,7 +180,7 @@ function handleThrow(thrownValue) {
     thrownValue = getSuspendedThenable()
     // 记录FiberNode中断渲染状态
     workInProgressSuspendedReason = SuspendedOnImmediate
-  }
+  } else workInProgressSuspendedReason = SuspendedOnError
   workInProgressThrownValue = thrownValue
 }
 
@@ -199,7 +201,7 @@ function renderRootSync(root, lanes) {
   // 如果workInProgressRoot和workInProgressRootRenderLanes和本次渲染的root和lanes相同，说明是执行同一个任务
   if (root !== workInProgressRoot || lanes !== workInProgressRootRenderLanes)
     prepareFreshStack(root, lanes)
-  do {
+  outer: do {
     try {
       if (
         workInProgressSuspendedReason !== NotSuspended &&
@@ -215,6 +217,10 @@ function renderRootSync(root, lanes) {
             throwAndUnwindWorkLoop(unitOfWork, thrownValue, reason)
             break
           }
+          default:
+            workInProgressRootExitStatus = RootErrored
+            workInProgressSuspendedReason = NotSuspended
+            break outer
         }
       }
       // 递归遍历FiberNode节点，创建ReactElement对应的FiberNode节点，建立关联关系，构建FiberNode Tree
@@ -289,6 +295,8 @@ function performWorkOnRoot(root, lanes, forceSync) {
   // 构建FiberNode Tree和DOM树
   if (shouldTimeSlice) renderRootConcurrent(root, lanes)
   else renderRootSync(root, lanes)
+  if (workInProgressRootExitStatus === RootErrored)
+    throw workInProgressThrownValue
   if (workInProgressRootExitStatus !== RootInProgress) {
     // 更新DOM
     commitRoot(root)

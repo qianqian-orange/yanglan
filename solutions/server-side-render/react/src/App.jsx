@@ -6,10 +6,11 @@ function App() {
   return (
     <div>
       <h1
-        style={{ color: 'red', fontSize: '16px' }}
-        onClick={() => setCounter(counter + 1)}
+        onClick={() => {
+          setCounter(counter + 1)
+        }}
       >
-        {counter}
+        hello world{counter}
       </h1>
     </div>
   )
