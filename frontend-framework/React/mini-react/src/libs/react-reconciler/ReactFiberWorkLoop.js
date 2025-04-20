@@ -1,5 +1,5 @@
 import { createWorkInProgress } from './ReactFiber'
-import { beginWork } from './ReactFiberBeginWork'
+import { beginWork, updateFunctionComponent } from './ReactFiberBeginWork'
 import {
   commitBeforeMutationEffectsOnFiber,
   commitLayoutEffectOnFiber,
@@ -18,21 +18,18 @@ import {
   markRootUpdated,
   NoLanes,
 } from './ReactFiberLane'
-import {
-  // Incomplete,
-  // NoFlags,
-  PassiveMask,
-  // ScheduleRetry,
-} from './ReactFiberFlags'
+import { NoFlags, PassiveMask } from './ReactFiberFlags'
 import { ensureRootIsScheduled } from './ReactFiberRootScheduler'
 import { shouldYieldToHost } from '../scheduler/Scheduler'
-import { getSuspendedThenable, SuspenseException } from './ReactFiberThenable'
+import {
+  getSuspendedThenable,
+  isThenableResolved,
+  SuspenseException,
+} from './ReactFiberThenable'
 import { resetHooksAfterThrow } from './ReactFiberHooks'
 import { unwindWork } from './ReactFiberUnwindWork'
 import { throwException } from './ReactFiberThrow'
 import { enqueueConcurrentRenderForLane } from './ReactFiberConcurrentUpdates'
-// import { suspenseHandlerStackCursor } from './ReactFiberSuspenseContext'
-// import { SuspenseComponent } from './ReactWorkTags'
 
 export const NoContext = 0
 export const RenderContext = 2
@@ -48,6 +45,7 @@ const RootCompleted = 5
 const NotSuspended = 0
 const SuspendedOnError = 1
 const SuspendedOnImmediate = 3
+const SuspendedAndReadyToContinue = 7
 
 export let executionContext = NoContext
 // 记录当前FiberNode
@@ -91,7 +89,10 @@ export function requestDeferredLane() {
 export function resolveRetryWakeable(boundaryFiber, wakeable) {
   const retryCache = boundaryFiber.stateNode
   if (retryCache !== null) retryCache.delete(wakeable)
-  const retryLane = claimNextRetryLane()
+  const suspenseState = boundaryFiber.memoizedState
+  let retryLane = NoLanes
+  if (suspenseState !== null) retryLane = suspenseState.retryLane
+  else retryLane = claimNextRetryLane()
   const root = enqueueConcurrentRenderForLane(boundaryFiber, retryLane)
   // 触发更新渲染
   scheduleUpdateOnFiber(root, retryLane)
@@ -109,8 +110,8 @@ function unwindUnitOfWork(unitOfWork) {
     const returnFiber = unitOfWork.return
     if (returnFiber !== null) {
       // returnFiber.flags |= Incomplete
-      // returnFiber.subtreeFlags = NoFlags
-      // returnFiber.deletions = null
+      returnFiber.subtreeFlags = NoFlags
+      returnFiber.deletions = null
     }
     workInProgress = unitOfWork = returnFiber
   } while (unitOfWork !== null)
@@ -149,6 +150,26 @@ function performUnitOfWork(unitOfWork) {
   }
 }
 
+function replayBeginWork(unitOfWork) {
+  const current = unitOfWork.alternate
+  const Component = workInProgress.elementType
+  return updateFunctionComponent(
+    current,
+    unitOfWork,
+    Component,
+    workInProgressRootRenderLanes,
+  )
+}
+
+function replaySuspendedUnitOfWork(unitOfWork) {
+  let nextFiber = replayBeginWork(unitOfWork)
+  if (nextFiber === null) {
+    completeUnitOfWork(unitOfWork)
+  } else {
+    workInProgress = nextFiber
+  }
+}
+
 function prepareFreshStack(root, lanes) {
   // 将FiberRootNode对象赋值给workInProgressRoot
   workInProgressRoot = root
@@ -161,14 +182,9 @@ function prepareFreshStack(root, lanes) {
   entangledRenderLanes = getEntangledLanes(root, lanes)
 }
 
-function throwAndUnwindWorkLoop(unitOfWork, thrownValue, suspendedReason) {
-  // 将Suspense组件类型FiberNode的flags赋值为ShouldCapture且promise实例赋值给FiberNode的updateQueue属性
+function throwAndUnwindWorkLoop(unitOfWork, thrownValue) {
+  // 将Suspense组件类型FiberNode的flags赋值为ShouldCapture且将promise实例赋值给FiberNode的updateQueue属性
   throwException(unitOfWork, thrownValue)
-  if (suspendedReason === SuspendedOnImmediate) {
-    //   const boundary = suspenseHandlerStackCursor.current
-    //   if (boundary !== null && boundary.tag === SuspenseComponent)
-    //     boundary.flags |= ScheduleRetry
-  }
   // 将Suspense组件类型FiberNode赋值给workInProgress且将flags赋值为DidCapture
   unwindUnitOfWork(unitOfWork)
 }
@@ -217,10 +233,17 @@ function renderRootSync(root, lanes) {
             throwAndUnwindWorkLoop(unitOfWork, thrownValue, reason)
             break
           }
-          default:
-            workInProgressRootExitStatus = RootErrored
+          case SuspendedOnError:
             workInProgressSuspendedReason = NotSuspended
+            workInProgressRootExitStatus = RootErrored
             break outer
+          default: {
+            const reason = workInProgressSuspendedReason
+            workInProgressSuspendedReason = NotSuspended
+            workInProgressThrownValue = null
+            throwAndUnwindWorkLoop(unitOfWork, thrownValue, reason)
+            break
+          }
         }
       }
       // 递归遍历FiberNode节点，创建ReactElement对应的FiberNode节点，建立关联关系，构建FiberNode Tree
@@ -244,10 +267,45 @@ function renderRootConcurrent(root, lanes) {
   // 如果workInProgressRoot和workInProgressRootRenderLanes和本次渲染的root和lanes相同，说明是执行同一个任务
   if (root !== workInProgressRoot || lanes !== workInProgressRootRenderLanes)
     prepareFreshStack(root, lanes)
-  // 每执行一次performUnitOfWork方法后中断下一次执行，在下一个宏任务再继续执行
-  while (workInProgress !== null && !shouldYieldToHost()) {
-    performUnitOfWork(workInProgress)
-  }
+  outer: do {
+    try {
+      if (
+        workInProgressSuspendedReason !== NotSuspended &&
+        workInProgress !== null
+      ) {
+        const unitOfWork = workInProgress
+        const thrownValue = workInProgressThrownValue
+        switch (workInProgressSuspendedReason) {
+          case SuspendedOnImmediate:
+            workInProgressSuspendedReason = SuspendedAndReadyToContinue
+            break outer
+          case SuspendedAndReadyToContinue:
+            workInProgressSuspendedReason = NotSuspended
+            workInProgressThrownValue = null
+            if (isThenableResolved(thrownValue))
+              replaySuspendedUnitOfWork(unitOfWork)
+            else
+              throwAndUnwindWorkLoop(
+                unitOfWork,
+                thrownValue,
+                SuspendedAndReadyToContinue,
+              )
+            break
+          case SuspendedOnError:
+            workInProgressSuspendedReason = NotSuspended
+            workInProgressRootExitStatus = RootErrored
+            break outer
+        }
+      }
+      // 每执行一次performUnitOfWork方法后中断执行，在下一个宏任务再继续执行
+      while (workInProgress !== null && !shouldYieldToHost()) {
+        performUnitOfWork(workInProgress)
+      }
+      break
+    } catch (thrownValue) {
+      handleThrow(thrownValue)
+    }
+  } while (true)
   executionContext = NoContext
   if (workInProgress === null) {
     workInProgressRoot = null

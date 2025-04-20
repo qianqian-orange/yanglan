@@ -53,6 +53,7 @@
   },
   "dependencies": {
     "express": "^5.1.0",
-    "jsdom": "^26.1.0"
+    "jsdom": "^26.1.0",
+    "react": "^19.1.0"
   }
 }

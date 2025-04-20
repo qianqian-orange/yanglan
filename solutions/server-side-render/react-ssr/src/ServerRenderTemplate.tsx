@@ -1,7 +1,11 @@
 import React from 'react'
 import App from './App'
 
-function ServerRenderTemplate() {
+function ServerRenderTemplate({
+  bootstrapScripts,
+}: {
+  bootstrapScripts: string[]
+}) {
   return (
     <html>
       <head>
@@ -11,6 +15,9 @@ function ServerRenderTemplate() {
         <div id='app'>
           <App />
         </div>
+        {bootstrapScripts.map(s => (
+          <script key={s} src={s} defer></script>
+        ))}
       </body>
     </html>
   )

@@ -3,7 +3,7 @@ const internalInstanceKey = '__reactFiber$' + randomKey
 const internalPropsKey = '__reactProps$' + randomKey
 
 // 记录FiberNode
-export function precacheFiberNode(hostInst, node) {
+export function precacheFiberNode(node, hostInst) {
   node[internalInstanceKey] = hostInst
 }
 

@@ -1,3 +1,5 @@
+import { trackUsedThenable } from './ReactFizzThenable'
+
 function noop() {}
 
 function basicStateReducer(state, action) {
@@ -14,7 +16,12 @@ function useReducer(reducer, initialState) {
   return [initialState, noop]
 }
 
+function use(usable) {
+  return trackUsedThenable(usable)
+}
+
 export const HooksDispatcher = {
+  use,
   useState,
   useReducer,
   useEffect: noop,

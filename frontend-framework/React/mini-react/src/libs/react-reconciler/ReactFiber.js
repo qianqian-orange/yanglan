@@ -1,6 +1,10 @@
 import { NoFlags } from './ReactFiberFlags'
 import { NoLanes } from './ReactFiberLane'
-import { Fragment, OffscreenComponent } from './ReactWorkTags'
+import {
+  DehydratedFragment,
+  Fragment,
+  OffscreenComponent,
+} from './ReactWorkTags'
 
 function FiberNode(tag, pendingProps, key = null) {
   this.tag = tag // FiberNode节点类型
@@ -62,6 +66,12 @@ export function createFiberFromFragment(elements) {
 
 export function createFiberFromOffscreen(pendingProps) {
   const fiber = createFiber(OffscreenComponent, pendingProps)
+  return fiber
+}
+
+export function createFiberFromDehydratedFragment(dehydratedNode) {
+  const fiber = createFiber(DehydratedFragment, null)
+  fiber.stateNode = dehydratedNode
   return fiber
 }
 

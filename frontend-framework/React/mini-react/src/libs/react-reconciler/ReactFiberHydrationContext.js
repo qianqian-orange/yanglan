@@ -1,10 +1,16 @@
 import {
+  canHydrateSuspenseInstance,
   getFirstHydratableChild,
+  getFirstHydratableChildWithinSuspenseInstance,
+  getNextHydratableInstanceAfterSuspenseInstance,
   getNextHydratableSibling,
   hydrateInstance,
+  hydrateSuspenseInstance,
   hydrateTextInstance,
 } from '../react-dom-bindings/client/ReactFiberConfigDOM'
-import { HostComponent, HostRoot } from './ReactWorkTags'
+import { createFiberFromDehydratedFragment } from './ReactFiber'
+import { OffscreenLane } from './ReactFiberLane'
+import { HostComponent, HostRoot, SuspenseComponent } from './ReactWorkTags'
 
 // 判断是否处于hydrate阶段
 export let isHydrating = false
@@ -17,6 +23,16 @@ let nextHydratableInstance = null
 export function enterHydrationState(fiber) {
   const parentInstance = fiber.stateNode.containerInfo
   nextHydratableInstance = getFirstHydratableChild(parentInstance)
+  isHydrating = true
+  hydrationParentFiber = fiber
+}
+
+export function reenterHydrationStateFromDehydratedSuspenseInstance(
+  fiber,
+  suspenseInstance,
+) {
+  nextHydratableInstance =
+    getFirstHydratableChildWithinSuspenseInstance(suspenseInstance)
   isHydrating = true
   hydrationParentFiber = fiber
 }
@@ -41,6 +57,26 @@ export function tryToClaimNextHydratableTextInstance(fiber) {
   }
 }
 
+// 处理SuspenseComponent类型FiberNode hydrate逻辑
+export function tryToClaimNextHydratableSuspenseInstance(fiber) {
+  if (!isHydrating) return
+  if (nextHydratableInstance !== null) {
+    const suspenseInstance = canHydrateSuspenseInstance(nextHydratableInstance)
+    if (suspenseInstance === null) return
+    const suspenseState = {
+      dehydrated: suspenseInstance,
+      retryLane: OffscreenLane,
+    }
+    fiber.memoizedState = suspenseState
+    const dehydratedFragment =
+      createFiberFromDehydratedFragment(suspenseInstance)
+    dehydratedFragment.return = fiber
+    fiber.child = dehydratedFragment
+    hydrationParentFiber = fiber
+    nextHydratableInstance = null
+  }
+}
+
 // 获取父FiberNode
 function popToNextHostParent(fiber) {
   hydrationParentFiber = fiber.return
@@ -59,10 +95,18 @@ export function popHydrationState(fiber) {
   if (fiber !== hydrationParentFiber) return false
   if (!isHydrating) return false
   popToNextHostParent(fiber)
-  // 获取下一个hydrate dom节点
-  nextHydratableInstance = hydrationParentFiber
-    ? getNextHydratableSibling(fiber.stateNode)
-    : null
+  if (fiber.tag === SuspenseComponent) {
+    const suspenseState = fiber.memoizedState
+    const suspenseInstance =
+      suspenseState !== null ? suspenseState.dehydrated : null
+    nextHydratableInstance =
+      getNextHydratableInstanceAfterSuspenseInstance(suspenseInstance)
+  } else {
+    // 获取下一个hydrate dom节点
+    nextHydratableInstance = hydrationParentFiber
+      ? getNextHydratableSibling(fiber.stateNode)
+      : null
+  }
   return true
 }
 
@@ -77,4 +121,10 @@ export function prepareToHydrateHostInstance(fiber) {
 
 export function prepareToHydrateHostTextInstance(fiber) {
   hydrateTextInstance(fiber.stateNode, fiber)
+}
+
+export function prepareToHydrateHostSuspenseInstance(fiber) {
+  const suspenseState = fiber.memoizedState
+  const suspenseInstance = suspenseState.dehydrated
+  hydrateSuspenseInstance(suspenseInstance, fiber)
 }

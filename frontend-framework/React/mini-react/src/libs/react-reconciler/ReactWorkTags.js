@@ -13,7 +13,9 @@ export const SimpleMemoComponent = 15
 export const ContextProvider = 10
 // Suspense组件类型FiberNode
 export const SuspenseComponent = 13
-
+// Suspense组件children内容的父FiberNode类型
 export const OffscreenComponent = 22
 // Fragment组件
 export const Fragment = 7
+// hydrate Suspense组件children内容的父FiberNode类型
+export const DehydratedFragment = 18

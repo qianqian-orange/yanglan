@@ -14,7 +14,7 @@ import {
   OffscreenComponent,
   SuspenseComponent,
 } from './ReactWorkTags'
-import { NoLanes } from './ReactFiberLane'
+import { NoLanes, OffscreenLane } from './ReactFiberLane'
 import {
   ChildDeletion,
   DidCapture,
@@ -28,8 +28,11 @@ import { mountChildFibers, reconcileChildFibers } from './ReactChildFiber'
 import { pushProvider } from './ReactFiberNewContext'
 import {
   enterHydrationState,
+  isHydrating,
+  reenterHydrationStateFromDehydratedSuspenseInstance,
   resetHydrationState,
   tryToClaimNextHydratableInstance,
+  tryToClaimNextHydratableSuspenseInstance,
   tryToClaimNextHydratableTextInstance,
 } from './ReactFiberHydrationContext'
 import {
@@ -105,7 +108,7 @@ function updateHostRoot(current, workInProgress) {
   return reconcileChildren(current, workInProgress, nextChildren)
 }
 
-function updateFunctionComponent(
+export function updateFunctionComponent(
   current,
   workInProgress,
   Component,
@@ -261,6 +264,37 @@ function updateSuspensePrimaryChildren(
   return primaryChildFragment
 }
 
+function mountDehydratedSuspenseComponent(workInProgress) {
+  workInProgress.lanes = OffscreenLane
+  return null
+}
+
+function updateDehydratedSuspenseComponent(
+  current,
+  workInProgress,
+  didSuspend,
+  nextProps,
+  suspenseInstance,
+) {
+  if (!didSuspend) {
+    pushPrimaryTreeSuspenseHandler(workInProgress)
+    reenterHydrationStateFromDehydratedSuspenseInstance(
+      workInProgress,
+      suspenseInstance,
+    )
+    const primaryChildren = nextProps.children
+    const primaryChildFragment = mountSuspensePrimaryChildren(
+      workInProgress,
+      primaryChildren,
+    )
+    return primaryChildFragment
+  }
+  pushFallbackTreeSuspenseHandler()
+  workInProgress.child = current.child
+  workInProgress.flags |= DidCapture
+  return null
+}
+
 function updateSuspenseComponent(current, workInProgress) {
   const nextProps = workInProgress.pendingProps
   // 是否展示fallback组件
@@ -273,8 +307,20 @@ function updateSuspenseComponent(current, workInProgress) {
   const nextFallbackChildren = nextProps.fallback
   const nextPrimaryChildren = nextProps.children
   if (current === null) {
+    if (isHydrating) {
+      if (showFallback) pushFallbackTreeSuspenseHandler()
+      else pushPrimaryTreeSuspenseHandler(workInProgress)
+      tryToClaimNextHydratableSuspenseInstance(workInProgress)
+      const suspenseState = workInProgress.memoizedState
+      if (suspenseState !== null) {
+        const { dehydrated } = suspenseState
+        if (dehydrated !== null) {
+          return mountDehydratedSuspenseComponent(workInProgress)
+        }
+      }
+    }
     if (showFallback) {
-      pushFallbackTreeSuspenseHandler(workInProgress)
+      pushFallbackTreeSuspenseHandler()
       const fallbackFragment = mountSuspenseFallbackChildren(
         workInProgress,
         nextPrimaryChildren,
@@ -286,8 +332,21 @@ function updateSuspenseComponent(current, workInProgress) {
       return mountSuspensePrimaryChildren(workInProgress, nextPrimaryChildren)
     }
   }
+  const prevState = current.memoizedState
+  if (prevState !== null) {
+    const dehydrated = prevState.dehydrated
+    if (dehydrated !== null) {
+      return updateDehydratedSuspenseComponent(
+        current,
+        workInProgress,
+        didSuspend,
+        nextProps,
+        dehydrated,
+      )
+    }
+  }
   if (showFallback) {
-    pushFallbackTreeSuspenseHandler(workInProgress)
+    pushFallbackTreeSuspenseHandler()
     return updateSuspenseFallbackChildren(
       current,
       workInProgress,
@@ -321,17 +380,19 @@ function updateFragment(current, workInProgress) {
 function beginWork(workInProgress, renderLanes) {
   // 获取旧FiberNode节点
   const current = workInProgress.alternate
-  if (
-    current !== null &&
-    current.pendingProps === workInProgress.pendingProps &&
-    (workInProgress.lanes & renderLanes) === NoLanes
-  ) {
-    switch (workInProgress.tag) {
-      case HostRoot:
-        resetHydrationState()
-        break
+  if (current !== null) {
+    if (
+      current.pendingProps === workInProgress.pendingProps &&
+      (workInProgress.lanes & renderLanes) === NoLanes &&
+      (workInProgress.flags & DidCapture) === NoFlags
+    ) {
+      switch (workInProgress.tag) {
+        case HostRoot:
+          resetHydrationState()
+          break
+      }
+      return cloneChildFibers(current, workInProgress)
     }
-    return cloneChildFibers(current, workInProgress)
   }
   workInProgress.lanes = NoLanes
   switch (workInProgress.tag) {

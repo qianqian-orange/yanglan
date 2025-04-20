@@ -4,14 +4,20 @@ import {
 } from '../shared/ReactFeatureFlags'
 
 export const NoLanes = 0
+// 同步更新优先级
 export const SyncLane = /*                        */ 0b0000000000000000000000000000010 // 2
 export const InputContinuousLane = /*             */ 0b0000000000000000000000000001000 // 8
+// 首次渲染hydrate优先级
 export const DefaultHydrationLane = /*            */ 0b0000000000000000000000000010000 // 16
+// 首次渲染默认优先级
 export const DefaultLane = /*                     */ 0b0000000000000000000000000100000 // 32
 export const IdleLane = /*                        */ 0b0010000000000000000000000000000 // 268435456
 export const InputContinuousHydrationLane = /*    */ 0b0000000000000000000000000000100 // 4
+export const OffscreenLane = /*                   */ 0b0100000000000000000000000000000 // 536870912
+// useDeferredValue相关优先级
 export const DeferredLane = /*                    */ 0b1000000000000000000000000000000 // 1073741824
 const NonIdleLanes = /*                           */ 0b0000111111111111111111111111111 // 134217727
+// 延迟更新优先级
 const TransitionLanes = /*                        */ 0b0000000001111111111111110000000 // 4194176
 const TransitionLane1 = /*                        */ 0b0000000000000000000000010000000 // 128
 const TransitionLane2 = /*                        */ 0b0000000000000000000000100000000 // 256
@@ -28,7 +34,7 @@ const TransitionLane12 = /*                       */ 0b0000000000001000000000000
 const TransitionLane13 = /*                       */ 0b0000000000010000000000000000000 // 524288
 const TransitionLane14 = /*                       */ 0b0000000000100000000000000000000 // 1048576
 const TransitionLane15 = /*                       */ 0b0000000001000000000000000000000 // 2097152
-
+// 异步操作优先级
 const RetryLanes = /*                             */ 0b0000011110000000000000000000000 // 62914560
 const RetryLane1 = /*                             */ 0b0000000010000000000000000000000 // 4194304
 const RetryLane2 = /*                             */ 0b0000000100000000000000000000000 // 8388608
@@ -63,6 +69,8 @@ function getHighestPriorityLanes(lanes) {
       return DefaultLane
     case DefaultHydrationLane:
       return DefaultHydrationLane
+    case OffscreenLane:
+      return OffscreenLane
     case TransitionLane1:
     case TransitionLane2:
     case TransitionLane3:

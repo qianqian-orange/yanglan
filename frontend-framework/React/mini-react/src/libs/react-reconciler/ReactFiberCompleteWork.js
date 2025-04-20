@@ -10,13 +10,21 @@ import {
   SuspenseComponent,
 } from './ReactWorkTags'
 import { setInitialProperties } from '../react-dom-bindings/client/ReactDOMComponent'
-import { NoFlags, Snapshot, Update, Visibility } from './ReactFiberFlags'
+import {
+  DidCapture,
+  NoFlags,
+  Snapshot,
+  Update,
+  Visibility,
+} from './ReactFiberFlags'
 import { NoLanes } from './ReactFiberLane'
 import { popProvider } from './ReactFiberNewContext'
 import {
   popHydrationState,
   prepareToHydrateHostInstance,
+  prepareToHydrateHostSuspenseInstance,
   prepareToHydrateHostTextInstance,
+  resetHydrationState,
 } from './ReactFiberHydrationContext'
 import {
   createInstance,
@@ -42,6 +50,28 @@ export function appendAllChildren(el, workInProgress) {
 
 function scheduleRetryEffect(workInProgress, retryQueue) {
   if (retryQueue !== null) markUpdate(workInProgress)
+}
+
+function completeDehydratedSuspenseBoundary(
+  current,
+  workInProgress,
+  nextState,
+) {
+  popHydrationState(workInProgress)
+  if (nextState !== null && nextState.dehydrated !== null) {
+    if (current === null) {
+      prepareToHydrateHostSuspenseInstance(workInProgress)
+      bubbleProperties(workInProgress)
+      return false
+    } else {
+      resetHydrationState()
+      if ((workInProgress.flags & DidCapture) === NoFlags)
+        workInProgress.memoizedState = null
+      markUpdate(workInProgress)
+      bubbleProperties(workInProgress)
+      return false
+    }
+  } else return true
 }
 
 // 收集子树节点副作用
@@ -128,6 +158,19 @@ function completeWork(workInProgress) {
       bubbleProperties(workInProgress)
       return
     case SuspenseComponent: {
+      const nextState = workInProgress.memoizedState
+      if (
+        current === null ||
+        (current.memoizedState !== null &&
+          current.memoizedState.dehydrated !== null)
+      ) {
+        const fallthroughToNormalSuspensePath =
+          completeDehydratedSuspenseBoundary(current, workInProgress, nextState)
+        if (!fallthroughToNormalSuspensePath) {
+          popSuspenseHandler(workInProgress)
+          return null
+        }
+      }
       popSuspenseHandler(workInProgress)
       if (current !== null) {
         const currentOffscreenFiber = current.child

@@ -2,6 +2,7 @@ import {
   stringToPrecomputedChunk,
   writeChunk,
 } from '../../react-server/ReactServerStreamConfigNode'
+import { completeBoundary } from './fizz-instruction-set/ReactDOMFizzInstructionSetInlineCodeStrings'
 
 export const doctypeChunk = stringToPrecomputedChunk('<!DOCTYPE html>')
 // const styleAttributeStart = stringToPrecomputedChunk(' style="')
@@ -12,6 +13,21 @@ export const doctypeChunk = stringToPrecomputedChunk('<!DOCTYPE html>')
 // const attributeEnd = stringToPrecomputedChunk('"')
 // const endOfStartTag = stringToPrecomputedChunk('>')
 // const endOfStartTagSelfClosing = stringToPrecomputedChunk('/>')
+const textSeparator = stringToPrecomputedChunk('<!-- -->')
+const startPendingSuspenseBoundary1 = stringToPrecomputedChunk(
+  '<!--$?--><template id="',
+)
+const startPendingSuspenseBoundary2 = stringToPrecomputedChunk('"></template>')
+const endSuspenseBoundary = stringToPrecomputedChunk('<!--/$-->')
+const startSegmentHTML = stringToPrecomputedChunk('<div hidden id="')
+const startSegmentHTML2 = stringToPrecomputedChunk('">')
+const endSegmentHTML = stringToPrecomputedChunk('</div>')
+const completeBoundaryScript1Full = stringToPrecomputedChunk(
+  completeBoundary + '$RC("',
+)
+const completeBoundaryScript2 = stringToPrecomputedChunk('","')
+const completeBoundaryScript3b = stringToPrecomputedChunk('"')
+const completeBoundaryScriptEnd = stringToPrecomputedChunk(')</script>')
 
 const uppercasePattern = /([A-Z])/g
 
@@ -36,9 +52,20 @@ function pushAttribute(target, name, value) {
     case 'style':
       pushStyleAttribute(target, value)
       break
+    case 'defer':
+    case 'async':
+      target.push(` ${name}`)
+      break
     default:
       if (!name.startsWith('on')) target.push(` ${name}="${value}"`)
   }
+}
+
+export function pushTextInstance(target, text, textEmbedded) {
+  if (text === '') return textEmbedded
+  if (textEmbedded) target.push(textSeparator)
+  target.push(text)
+  return true
 }
 
 export function pushStartGenericElement(target, props, tag) {
@@ -77,9 +104,11 @@ export function pushStartInstance(target, type, props, renderState) {
       hoistableChunks.push(stringToPrecomputedChunk('</title>'))
       return null
     case 'script':
-      return
+      pushStartGenericElement(target, props, 'script')
+      target.push(stringToPrecomputedChunk('</script>'))
+      return null
     case 'link':
-      return
+      return null
   }
   return pushStartGenericElement(target, props, type)
 }
@@ -118,8 +147,14 @@ export function writePreambleStart(destination, renderState) {
   hoistableChunks.length = 0
 }
 
-export function writePreambleEnd(destination) {
+export function writePreambleEnd(destination, renderState) {
   writeChunk(destination, stringToPrecomputedChunk('</head>'))
+  const {
+    preamble: { bodyChunks },
+  } = renderState
+  for (let i = 0; i < bodyChunks.length; i++) {
+    writeChunk(destination, bodyChunks[i])
+  }
 }
 
 export function writeBootstrap(destination, renderState) {
@@ -135,6 +170,47 @@ export function writePostamble(destination, resumableState) {
     writeChunk(destination, stringToPrecomputedChunk('</body>'))
   if (resumableState.hasHtml)
     writeChunk(destination, stringToPrecomputedChunk('</html>'))
+}
+
+// 添加template chunk
+export function writeStartPendingSuspenseBoundary(
+  destination,
+  renderState,
+  id,
+) {
+  writeChunk(destination, startPendingSuspenseBoundary1)
+  writeChunk(destination, renderState.boundaryPrefix)
+  writeChunk(destination, id.toString(16))
+  writeChunk(destination, startPendingSuspenseBoundary2)
+}
+
+export function writeEndPendingSuspenseBoundary(destination) {
+  writeChunk(destination, endSuspenseBoundary)
+}
+
+export function writeStartSegment(destination, renderState, id) {
+  writeChunk(destination, startSegmentHTML)
+  writeChunk(destination, renderState.segmentPrefix)
+  writeChunk(destination, id.toString(16))
+  writeChunk(destination, startSegmentHTML2)
+}
+
+export function writeEndSegment(destination) {
+  writeChunk(destination, endSegmentHTML)
+}
+
+// 当异步操作有结果后，插入一段script脚本，执行页面更新逻辑
+export function writeCompletedSegmentInstruction(destination, renderState, id) {
+  writeChunk(destination, renderState.startInlineScript)
+  writeChunk(destination, completeBoundaryScript1Full)
+  const idChunk = id.toString(16)
+  writeChunk(destination, renderState.boundaryPrefix)
+  writeChunk(destination, idChunk)
+  writeChunk(destination, completeBoundaryScript2)
+  writeChunk(destination, renderState.segmentPrefix)
+  writeChunk(destination, idChunk)
+  writeChunk(destination, completeBoundaryScript3b)
+  writeChunk(destination, completeBoundaryScriptEnd)
 }
 
 export function createResumableState(bootstrapScripts) {
@@ -170,6 +246,9 @@ export function createRenderState(resumableState) {
     }
   }
   const renderState = {
+    segmentPrefix: stringToPrecomputedChunk('S:'), // 异步chunk id属性值前缀
+    boundaryPrefix: stringToPrecomputedChunk('B:'), // template id属性值前缀
+    startInlineScript: stringToPrecomputedChunk('<script>'),
     preamble: createPreambleState(),
     hoistableChunks: [],
     bootstrapChunks,

@@ -9,7 +9,7 @@ import {
 } from '../../react-server/ReactFizzServer'
 
 function renderToPipeableStream(children, options) {
-  const { bootstrapScripts, onShellReady } = options
+  const { bootstrapScripts, onShellReady, onAllReady } = options
   const resumableState = createResumableState(bootstrapScripts)
   const renderState = createRenderState(resumableState)
   const request = createRequest(
@@ -17,7 +17,9 @@ function renderToPipeableStream(children, options) {
     resumableState,
     renderState,
     onShellReady,
+    onAllReady,
   )
+  // 添加一个微任务
   queueMicrotask(() => performWork(request))
 
   return {

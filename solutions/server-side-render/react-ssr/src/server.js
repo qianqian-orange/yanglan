@@ -94,9 +94,8 @@ const server = new webpackDevServer(
                 ...dom.window.document.querySelectorAll('script'),
               ].map(script => script.src)
               const { pipe } = renderToPipeableStream(
-                <ServerRenderTemplate />,
+                <ServerRenderTemplate bootstrapScripts={bootstrapScripts} />,
                 {
-                  bootstrapScripts,
                   onShellReady() {
                     pipe(res)
                   },

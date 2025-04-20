@@ -14,18 +14,13 @@ export const SuspenseException = new Error(
     "call the promise's `.catch` method and pass the result to `use`.",
 )
 
-function noop() {}
-
 export function getSuspendedThenable() {
   const thenable = suspendedThenable
   suspendedThenable = null
   return thenable
 }
 
-// thenables属性记录promise实例
-export function createThenableState() {
-  return { thenables: [] }
-}
+function noop() {}
 
 export function trackUsedThenable(thenable) {
   switch (thenable.status) {
@@ -63,9 +58,4 @@ export function trackUsedThenable(thenable) {
       // 当promise处于pending状态时抛异常
       throw SuspenseException
   }
-}
-
-export function isThenableResolved(thenable) {
-  const status = thenable.status
-  return status === 'fulfilled' || status === 'rejected'
 }
