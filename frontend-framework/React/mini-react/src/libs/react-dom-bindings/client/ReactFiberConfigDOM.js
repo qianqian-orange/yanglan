@@ -4,9 +4,7 @@ import { precacheFiberNode, updateFiberProps } from './ReactDOMComponentTree'
 function getNextHydratable(node) {
   for (; node !== null; node = node.nextSibling) {
     const nodeType = node.nodeType
-    if (nodeType === Node.ELEMENT_NODE || nodeType === Node.TEXT_NODE) {
-      break
-    }
+    if (nodeType === Node.ELEMENT_NODE || nodeType === Node.TEXT_NODE) break
   }
   return node
 }

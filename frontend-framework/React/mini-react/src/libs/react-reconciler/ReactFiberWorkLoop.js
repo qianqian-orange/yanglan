@@ -265,7 +265,7 @@ function commitRoot(root) {
   const remainingLanes = finishedhWork.lanes | finishedhWork.childLanes
   markRootFinished(root, remainingLanes, workInProgressDeferredLane)
   commitBeforeMutationEffectsOnFiber(finishedhWork)
-  executionContext = CommitContext
+  executionContext |= CommitContext
   // 递归遍历FiberNode节点，执行对应副作用处理逻辑
   commitMutationEffectsOnFiber(finishedhWork)
   // 1. 调用useLayoutEffect create方法

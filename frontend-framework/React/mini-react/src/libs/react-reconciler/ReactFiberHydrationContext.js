@@ -56,6 +56,7 @@ function popToNextHostParent(fiber) {
 }
 
 export function popHydrationState(fiber) {
+  if (fiber !== hydrationParentFiber) return false
   if (!isHydrating) return false
   popToNextHostParent(fiber)
   // 获取下一个hydrate dom节点

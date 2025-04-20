@@ -57,7 +57,9 @@ function renderElement(request, task, type, props) {
     const children = type(props)
     task.node = children
     retryNode(request, task)
-  } else if (typeof type === 'string') {
+    return
+  }
+  if (typeof type === 'string') {
     const { chunks } = task.blockedSegment
     const children = pushStartInstance(chunks, type, props, request.renderState)
     if (type === 'head') {

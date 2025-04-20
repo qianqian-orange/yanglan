@@ -8,6 +8,7 @@ function renderToString(children) {
     node: children, // 当前vnode
     blockedSegment: {
       chunks: [], // html片段
+      lastPushedText: false, // 上一个dom节点是否是纯文本
     },
   }
   // 递归遍历vnode，收集html片段

@@ -48,17 +48,27 @@ function pushStartGenericElement(target, props, tag) {
   return children
 }
 
+function pushTextInstance(target, text, textEmbedded) {
+  if (text === '') return textEmbedded
+  if (textEmbedded) target.push('<!-- -->')
+  target.push(text)
+  return true
+}
+
 function renderElement(task, type, props) {
   if (typeof type === 'function') {
     const children = type(props)
     task.node = children
     retryNode(task)
-  } else if (typeof type === 'string') {
-    const { chunks } = task.blockedSegment
-    const children = pushStartGenericElement(chunks, props, type)
+    return
+  }
+  if (typeof type === 'string') {
+    const { blockedSegment } = task
+    blockedSegment.lastPushedText = false
+    const children = pushStartGenericElement(blockedSegment.chunks, props, type)
     task.node = children
     retryNode(task)
-    chunks.push(`</${type}>`)
+    blockedSegment.chunks.push(`</${type}>`)
   }
 }
 
@@ -70,10 +80,7 @@ function renderChildrenArray(task, children) {
 }
 
 function retryNode(task) {
-  const {
-    node,
-    blockedSegment: { chunks },
-  } = task
+  const { node, blockedSegment } = task
   if (node === null) return
   if (Array.isArray(node)) {
     renderChildrenArray(task, node)
@@ -87,7 +94,21 @@ function retryNode(task) {
     }
     return
   }
-  chunks.push(`${node}`)
+  if (typeof node === 'string') {
+    blockedSegment.lastPushedText = pushTextInstance(
+      blockedSegment.chunks,
+      node,
+      blockedSegment.lastPushedText,
+    )
+    return
+  }
+  if (typeof node === 'number') {
+    blockedSegment.lastPushedText = pushTextInstance(
+      blockedSegment.chunks,
+      node + '',
+      blockedSegment.lastPushedText,
+    )
+  }
 }
 
 export function startWork(task) {
