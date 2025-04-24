@@ -12,6 +12,7 @@ const config: webpack.Configuration & Configuration = {
   devServer: {
     static: resolvePath('../dist'),
     open: true,
+    historyApiFallback: true,
   },
 }
 

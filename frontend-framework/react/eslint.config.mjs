@@ -25,6 +25,7 @@ export default [
       'jsx-quotes': ['error', 'prefer-single'],
       'comma-dangle': ['error', 'always-multiline'],
       'no-constant-condition': 'off',
+      'react/prop-types': 'off',
     },
   },
 ]

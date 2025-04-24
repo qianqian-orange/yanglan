@@ -13,6 +13,7 @@ const config: webpack.Configuration & Configuration = {
     port: 8000,
     static: resolvePath('../dist'),
     open: true,
+    historyApiFallback: true,
   },
 }
 

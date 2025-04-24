@@ -47,7 +47,7 @@ const siftDown = (heap, node, parentIndex) => {
   }
 }
 
-export const peek = (heap) => {
+export const peek = heap => {
   return heap.length === 0 ? null : heap[0]
 }
 
@@ -59,7 +59,7 @@ export const push = (heap, node) => {
   siftUp(heap, node, index)
 }
 
-export const pop = (heap) => {
+export const pop = heap => {
   if (heap.length === 0) return null
   const first = heap[0]
   const last = heap.pop()

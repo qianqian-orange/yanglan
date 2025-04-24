@@ -1,5 +1,5 @@
-import React from 'react'
-import { BrowserRouter, Link, Route, Routes } from 'react-router'
+import React from './libs'
+import { BrowserRouter, Link, Route, Routes } from './packages/react-router'
 
 function Home() {
   return <h1>Home</h1>
