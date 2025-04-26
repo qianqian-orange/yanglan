@@ -244,10 +244,10 @@ module.exports = {
   entry: {
     main: {
       import: './src/index.js',
-      dependOn: 'shared'
+      dependOn: 'shared',
     },
-    shared: 'lodash'
-  }
+    shared: 'lodash',
+  },
 }
 ```
 
@@ -257,9 +257,9 @@ module.exports = {
 module.exports = {
   optimization: {
     splitChunks: {
-      chunks: 'all'
-    }
-  }
+      chunks: 'all',
+    },
+  },
 }
 ```
 
@@ -280,7 +280,7 @@ const BundleAnalyzerPlugin =
   require('webpack-bundle-analyzer').BundleAnalyzerPlugin
 
 module.exports = {
-  plugins: [new BundleAnalyzerPlugin()]
+  plugins: [new BundleAnalyzerPlugin()],
 }
 ```
 
@@ -301,10 +301,10 @@ module.exports = {
       {
         test: /\.js$/,
         include: path.resolve(__dirname, 'src'),
-        use: ['thread-loader', 'babel-loader']
-      }
-    ]
-  }
+        use: ['thread-loader', 'babel-loader'],
+      },
+    ],
+  },
 }
 ```
 
@@ -315,10 +315,10 @@ module.exports = {
   resolve: {
     modules: [
       path.resolve(__dirname, 'src'),
-      path.resolve(__dirname, 'node_modules')
+      path.resolve(__dirname, 'node_modules'),
     ],
-    extensions: ['.js']
-  }
+    extensions: ['.js'],
+  },
 }
 ```
 
@@ -330,19 +330,19 @@ module.exports = {
 module.exports = {
   mode: 'production',
   entry: {
-    vendors: ['react', 'react-dom']
+    vendors: ['react', 'react-dom'],
   },
   output: {
     filename: '[name].[contenthash:6].dll.js',
     path: path.resolve(__dirname, '../dist/dll'),
-    library: '[name]_[fullhash]'
+    library: '[name]_[fullhash]',
   },
   plugins: [
     new webpack.DllPlugin({
       path: path.resolve(__dirname, '../dist/dll/manifest.json'),
-      name: '[name]_[fullhash]'
-    })
-  ]
+      name: '[name]_[fullhash]',
+    }),
+  ],
 }
 ```
 
@@ -352,9 +352,9 @@ module.exports = {
 module.exports = {
   plugins: [
     new webpack.DllReferencePlugin({
-      manifest: path.resolve(__dirname, './dist/dll/manifest.json')
-    })
-  ]
+      manifest: path.resolve(__dirname, './dist/dll/manifest.json'),
+    }),
+  ],
 }
 ```
 
@@ -371,8 +371,8 @@ module.exports = {
     globalObject: 'this',
     library: {
       name: 'libraryname',
-      type: 'umd' // 支持amd, commonjs, script tag
-    }
+      type: 'umd', // 支持amd, commonjs, script tag
+    },
   },
   // 通过外链引入
   externals: {
@@ -380,9 +380,9 @@ module.exports = {
       commonjs: 'lodash',
       commonjs2: 'lodash',
       amd: 'lodash',
-      root: '_'
-    }
-  }
+      root: '_',
+    },
+  },
 }
 ```
 
@@ -391,88 +391,3 @@ module.exports = {
 1. [深入理解 tapable 原理](https://juejin.cn/post/7448525006260781082)
 2. [深入理解 webpack build 原理](https://juejin.cn/spost/7450479518710054966)
 3. [深入理解 webpack 热更新原理](https://juejin.cn/post/7452321092674453531)
-4. 实现 mini webpack
-
-   ```javascript
-   // 1. 获取配置文件
-   // 2. 获取入口文件内容
-   // 3. 将代码转成ast树
-   // 4. 遍历ast树节点收集依赖
-   // 5. 将ast树转成代码
-   // 6. 递归遍历依赖
-   // 7. 输出模块代码
-
-   const path = require('path')
-   const fs = require('fs')
-   const parser = require('@babel/parser')
-   const traverse = require('@babel/traverse').default
-   const { transformFromAst } = require('@babel/core')
-   const config = require('./webpack.config')
-
-   function parse(projectPath, filename) {
-     filename = `${filename}${filename.includes('.js') ? '' : '.js'}`
-     const content = fs.readFileSync(
-       path.resolve(projectPath, filename),
-       'utf-8'
-     )
-     const ast = parser.parse(content, {
-       sourceType: 'module'
-     })
-     const dependencies = []
-     traverse(ast, {
-       ImportDeclaration({ node }) {
-         node.source.value = `${node.source.value}${
-           node.source.value.includes('.js') ? '' : '.js'
-         }`
-         node.source.value = path
-           .resolve(path.dirname(filename), node.source.value)
-           .replace(projectPath, '.')
-         dependencies.push(node.source.value)
-       }
-     })
-     const { code } = transformFromAst(ast, null, {
-       presets: ['@babel/preset-env']
-     })
-     return {
-       filename,
-       code,
-       dependencies
-     }
-   }
-
-   function bundle() {
-     const projectPath = process.cwd()
-     const main = parse(projectPath, config.entry)
-     const queue = [main]
-     for (let i = 0; i < queue.length; i++) {
-       const { dependencies } = queue[i]
-       for (let j = 0; j < dependencies.length; j++) {
-         queue.push(parse(projectPath, dependencies[j]))
-       }
-     }
-     const modules = queue.reduce((result, module) => {
-       result += `
-         '${module.filename}': function(module, exports, require) {
-           ${module.code}
-         },
-       `
-       return result
-     }, '')
-     const result = `
-       (function(modules) {
-         const cache = {}
-         function require(moduleId) {
-           if (cache[moduleId]) return cache[moduleId]
-           const module = {
-             exports: {},
-           }
-           cache[moduleId] = module.exports
-           const fn = modules[moduleId]
-           fn(module, module.exports, require)
-           return module.exports
-         }
-         require('${config.entry}')
-       })({ ${modules} })
-     `
-   }
-   ```

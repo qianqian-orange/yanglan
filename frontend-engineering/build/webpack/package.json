@@ -1,0 +1,19 @@
+{
+  "name": "tinywebpack",
+  "version": "1.0.0",
+  "description": "webpack 是 JS 模块打包器",
+  "main": "index.js",
+  "scripts": {
+    "start": "node src/lib/index.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "devDependencies": {
+    "@babel/core": "^7.26.10",
+    "@babel/parser": "^7.27.0",
+    "@babel/preset-env": "^7.26.9",
+    "@babel/traverse": "^7.27.0"
+  }
+}
