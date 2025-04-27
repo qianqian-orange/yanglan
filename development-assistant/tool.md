@@ -70,6 +70,14 @@ git插件
 
 数据库可视化
 
+### 1.9 Bookmarks
+
+书签
+
+### 1.10 filesize
+
+文件信息
+
 ## 2. [http-server](https://www.npmjs.com/package/http-server)
 
 启动本地服务器
