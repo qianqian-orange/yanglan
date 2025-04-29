@@ -4,12 +4,12 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "node --inspect server.js"
+    "start": "node --inspect server.js",
+    "build": "esbuild ./src/index.js --bundle --outdir=dist"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "type": "commonjs",
   "devDependencies": {
     "esbuild": "0.25.3"
   },

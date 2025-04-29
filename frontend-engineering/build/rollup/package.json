@@ -1,16 +1,19 @@
 {
-  "name": "mini-swc",
+  "name": "mini-rollup",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
   "scripts": {
-    "build": "swc ./src/index.js -d dist"
+    "start": "node --inspect server.js",
+    "build": "rollup --config"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "@swc/cli": "^0.7.3",
-    "@swc/core": "^1.11.22"
+    "rollup": "^4.40.1"
+  },
+  "dependencies": {
+    "express": "^5.1.0"
   }
 }
