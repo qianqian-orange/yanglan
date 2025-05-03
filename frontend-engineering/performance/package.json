@@ -1,12 +1,11 @@
 {
-  "name": "mini-react",
+  "name": "performance",
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
     "build": "cross-env NODE_ENV=production webpack --config configs/webpack.prod.ts",
     "start": "cross-env NODE_ENV=development webpack serve --config configs/webpack.dev.ts",
-    "server": "cross-env NODE_ENV=development node -r ts-node/register --inspect src/server.js",
-    "build:dll": "webpack --config configs/webpack.dll.js"
+    "server": "cross-env NODE_ENV=development node -r ts-node/register --inspect src/server.js"
   },
   "keywords": [],
   "author": "qianqian",
@@ -29,7 +28,6 @@
     "eslint": "^9.17.0",
     "eslint-plugin-react": "^7.37.3",
     "eslint-webpack-plugin": "^4.2.0",
-    "extract-css-chunks-webpack-plugin": "^4.10.0",
     "fork-ts-checker-webpack-plugin": "^9.0.2",
     "globals": "^15.14.0",
     "html-webpack-plugin": "^5.6.3",
@@ -41,7 +39,6 @@
     "stylelint": "^16.12.0",
     "stylelint-config-standard": "^36.0.1",
     "stylelint-webpack-plugin": "^5.0.1",
-    "thread-loader": "^4.0.4",
     "ts-loader": "^9.5.1",
     "ts-node": "^10.9.2",
     "typescript": "^5.8.3",
@@ -53,7 +50,8 @@
   },
   "dependencies": {
     "express": "^5.1.0",
-    "jsdom": "^26.1.0",
-    "react": "^19.1.0"
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "web-vitals": "^4.2.4"
   }
 }
