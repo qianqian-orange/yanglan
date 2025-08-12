@@ -29,7 +29,14 @@
    ./install.sh
    ```
 
-3. 查看 nvm 版本
+3. 在用户目录下创建.zshrc文件，然后添加以下内容保存，最后执行source .zshrc命令
+
+   ```bash
+   export NVM_DIR="$HOME/.nvm"
+   [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+   ```
+
+4. 查看 nvm 版本
 
    ```bash
    nvm -v
@@ -39,7 +46,7 @@
 
 > 基于 chrome v8 引擎的 javascript 运行环境
 
-1. 使用 nvm 安装制定 node 版本
+1. 使用 nvm 安装指定 node 版本
 
    ```bash
    nvm install <version> # 例如 nvm install v22
