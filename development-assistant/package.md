@@ -92,6 +92,14 @@ mysql库
 
 redis库
 
+### 4.4 [chokidar](https://www.npmjs.com/package/chokidar)
+
+监听文件变更
+
+### 4.5 [fast-glob](https://www.npmjs.com/package/fast-glob)
+
+文件系统
+
 ## 5. npm
 
 ### 5.1 [npm-run-all](https://www.npmjs.com/package/npm-run-all)
